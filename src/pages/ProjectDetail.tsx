@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { publicAsset } from '../utils/assetHelpers';
 import { projectsData } from '../data/projectsData';
 import type { Project } from '../types';
 
@@ -159,15 +160,18 @@ export default function ProjectDetail() {
           </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-2">
-            {project.images.map((src, index) => (
-              <GalleryImage
-                key={src ?? index}
-                src={src}
-                alt={`${project.title} preview ${index + 1}`}
-                initials={project.initials}
-                onOpen={(selectedSrc) => setLightboxSrc(selectedSrc)}
-              />
-            ))}
+            {project.images.map((src, index) => {
+              const assetSrc = publicAsset(src);
+              return (
+                <GalleryImage
+                  key={assetSrc ?? index}
+                  src={assetSrc}
+                  alt={`${project.title} preview ${index + 1}`}
+                  initials={project.initials}
+                  onOpen={(selectedSrc) => setLightboxSrc(selectedSrc)}
+                />
+              );
+            })}
           </div>
         </section>
 

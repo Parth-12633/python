@@ -966,7 +966,9 @@ export default function App() {
 
                 <div className="mt-auto pt-4">
                   <a
-                    href="#projects"
+                    href="https://dr-poojabala.netlify.app"
+                    target="_blank"
+                    rel="noreferrer noopener"
                     className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[13px] font-semibold text-white transition duration-300 hover:bg-white/10"
                   >
                     Explore Work →
