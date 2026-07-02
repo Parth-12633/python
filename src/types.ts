@@ -1,0 +1,22 @@
+export type Project = {
+  id: string;
+  slug: string;
+  badge: string;
+  initials: string;
+  title: string;
+  description: string;
+  tags: string[];
+  category: string;
+  technologies: string[];
+  status?: string;
+  previewImage: string;
+  overview: string;
+  challenge: string;
+  solution: string;
+  tools?: string[];
+  results: string[];
+  images: string[];
+  duration: string;
+  platform: string;
+  liveUrl?: string;
+};
