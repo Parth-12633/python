@@ -5,7 +5,7 @@ import ReactGA from 'react-ga4';
 import type { Project } from '../types';
 import { publicAsset } from '../utils/assetHelpers';
 
-const FALLBACK_IMAGE = 'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560"><rect width="900" height="560" fill="%230f172a"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="system-ui,sans-serif" font-size="32" fill="%23ffffff">Preview unavailable</text></svg>';
+const FALLBACK_IMAGE = 'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560"><rect width="900" height="560" fill="%230f172a"/></svg>';
 
 type ProjectCardProps = {
   project: Project;
