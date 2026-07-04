@@ -1,16 +1,17 @@
-import React, { useEffect, useRef, useState, type ReactNode } from 'react';
-import { motion, useAnimation } from 'framer-motion';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Lenis from 'lenis';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Float } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useEffect, useRef, useState, lazy, Suspense, type ReactNode } from 'react';
+import { motion, useAnimation, useScroll, useSpring } from 'framer-motion';
+// Heavy libraries (gsap, lenis, three, react-three) are loaded dynamically for performance.
+import emailjs from '@emailjs/browser';
+import { toast, Toaster } from 'react-hot-toast';
+import ReactGA from 'react-ga4';
+import { Helmet } from 'react-helmet-async';
+import { useInView } from 'react-intersection-observer';
 import {
   ArrowRight,
   Blocks,
   Brain,
   BrainCircuit,
+  CalendarDays,
   ChartNoAxesCombined,
   Box,
   Code2,
@@ -55,76 +56,33 @@ import { projectsData } from './data/projectsData';
 import ProjectDetail from './pages/ProjectDetail';
 import { Route, Routes } from 'react-router-dom';
 
-gsap.registerPlugin(ScrollTrigger);
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID ?? 'YOUR_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID ?? 'YOUR_TEMPLATE_ID';
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY ?? 'YOUR_PUBLIC_KEY';
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID ?? 'G-XXXXXXXXXX';
+const CLARITY_ID = import.meta.env.VITE_CLARITY_ID ?? 'YOUR_CLARITY_ID';
+const CALENDLY_URL = import.meta.env.VITE_CALENDLY_URL ?? 'https://calendly.com/YOUR_USERNAME';
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? 'YOUR_PHONE_NUMBER';
+const APP_URL = import.meta.env.VITE_APP_URL ?? 'https://yourdomain.com';
+const OG_IMAGE_URL = import.meta.env.VITE_OG_IMAGE_URL ?? `${APP_URL}/og-image.png`;
 
-type FadeInProps = {
-  children: ReactNode;
-  delay?: number;
-  duration?: number;
-};
+const ProjectsSection = lazy(() => import('./components/ProjectsSection'));
+const ProcessSection = lazy(() => import('./components/ProcessSection'));
 
-function FadeIn({ children, delay = 0, duration = 1000 }: FadeInProps) {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setVisible(true), delay);
-    return () => window.clearTimeout(timer);
-  }, [delay]);
+function SectionHeading({ children, className = '' }: { children: ReactNode; className?: string }) {
+  const [ref, inView] = useInView({ threshold: 0.2, triggerOnce: true });
 
   return (
-    <div
-      className="transition-opacity"
-      style={{ opacity: visible ? 1 : 0.15, transitionDuration: `${duration}ms` }}
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0.15, y: 18 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.75, ease: 'easeOut' }}
+      className={className}
     >
       {children}
-    </div>
+    </motion.div>
   );
-}
-
-const serviceObserverOptions = {
-  threshold: 0.1,
-  rootMargin: '0px 0px -50px 0px'
-};
-
-let serviceObserver: IntersectionObserver | null = null;
-const serviceRevealCallbacks = new Map<Element, () => void>();
-
-function getServiceObserver() {
-  if (!serviceObserver) {
-    serviceObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const callback = serviceRevealCallbacks.get(entry.target);
-        if (callback) {
-          callback();
-          serviceObserver?.unobserve(entry.target);
-          serviceRevealCallbacks.delete(entry.target);
-        }
-      });
-    }, serviceObserverOptions);
-  }
-
-  return serviceObserver;
-}
-
-function useServiceReveal(onReveal: () => void) {
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const observer = getServiceObserver();
-    serviceRevealCallbacks.set(element, onReveal);
-    observer.observe(element);
-
-    return () => {
-      observer.unobserve(element);
-      serviceRevealCallbacks.delete(element);
-    };
-  }, [onReveal]);
-
-  return ref;
 }
 
 type AnimatedHeadingProps = {
@@ -168,6 +126,30 @@ function AnimatedHeading({ text, className = '', delay = 200, charDelay = 32 }: 
         </span>
       ))}
     </h1>
+  );
+}
+
+type FadeInProps = {
+  children: ReactNode;
+  delay?: number;
+  duration?: number;
+};
+
+function FadeIn({ children, delay = 0, duration = 1000 }: FadeInProps) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setVisible(true), delay);
+    return () => window.clearTimeout(timer);
+  }, [delay]);
+
+  return (
+    <div
+      className="transition-opacity"
+      style={{ opacity: visible ? 1 : 0.15, transitionDuration: `${duration}ms` }}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -366,96 +348,7 @@ const stackStats = [
   { value: 'AI', label: 'Powered Development', text: 'Building intelligent digital experiences.' }
 ];
 
-type InteractiveBackgroundProps = {
-  activity: number;
-  mouse: { x: number; y: number };
-  focus: string;
-  scroll: number;
-};
 
-function BackgroundScene({ activity, mouse, focus, scroll }: InteractiveBackgroundProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const sphereRef = useRef<THREE.Mesh>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
-  const formRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    const time = state.clock.elapsedTime;
-
-    if (groupRef.current) {
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, mouse.x * 0.04 + (focus === 'services' ? 0.015 : 0), 0.02);
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -mouse.y * 0.03 + (focus === 'process' ? 0.01 : 0), 0.02);
-      groupRef.current.position.y = Math.sin(time * 0.08 + scroll * 0.0004) * 0.03;
-    }
-
-    if (sphereRef.current) {
-      sphereRef.current.position.x = -2.2 + mouse.x * 0.18;
-      sphereRef.current.position.y = 1.05 + Math.sin(time * 0.35 + scroll * 0.0002) * 0.09 - mouse.y * 0.06;
-      sphereRef.current.scale.setScalar(1 + activity * 0.015);
-    }
-
-    if (ringRef.current) {
-      ringRef.current.position.x = 2.0 + mouse.x * 0.12;
-      ringRef.current.position.y = -0.35 + Math.cos(time * 0.28 + scroll * 0.00015) * 0.08 + mouse.y * 0.04;
-      ringRef.current.rotation.z = time * 0.08;
-    }
-
-    if (formRef.current) {
-      formRef.current.position.x = -0.2 + mouse.x * 0.08;
-      formRef.current.position.y = -1.2 + Math.sin(time * 0.24 + scroll * 0.00012) * 0.08;
-      formRef.current.rotation.y = time * 0.1;
-      formRef.current.rotation.z = 0.25 + mouse.y * 0.02;
-    }
-  });
-
-  return (
-    <>
-      <color attach="background" args={['#020305']} />
-      <fog attach="fog" args={['#020305', 9, 22]} />
-      <ambientLight intensity={0.24} />
-      <directionalLight position={[3, 2, 5]} intensity={0.28} color="#e8efff" />
-      <spotLight position={[-2.5, 1.5, 4.5]} intensity={0.16} color="#8ebabd" angle={0.36} penumbra={0.28} />
-
-      <group ref={groupRef}>
-        <Float speed={0.2} rotationIntensity={0.03} floatIntensity={0.12}>
-          <mesh ref={sphereRef} position={[-2.2, 1.05, -1.4]}>
-            <sphereGeometry args={[0.7, 48, 48]} />
-            <meshPhysicalMaterial color="#f8fbff" roughness={0.14} metalness={0.12} transmission={0.9} thickness={0.4} transparent opacity={0.55} />
-          </mesh>
-        </Float>
-
-        <Float speed={0.18} rotationIntensity={0.02} floatIntensity={0.1}>
-          <mesh ref={ringRef} position={[2.0, -0.35, -1.35]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.8, 0.09, 20, 90]} />
-            <meshStandardMaterial color="#f2f7ff" metalness={0.7} roughness={0.2} emissive="#8eb2ff" emissiveIntensity={0.05} />
-          </mesh>
-        </Float>
-
-        <Float speed={0.22} rotationIntensity={0.03} floatIntensity={0.11}>
-          <mesh ref={formRef} position={[-0.2, -1.2, -1.8]} rotation={[0.22, 0.45, 0.18]}>
-            <torusKnotGeometry args={[0.5, 0.12, 96, 12]} />
-            <meshPhysicalMaterial color="#ffffff" roughness={0.17} metalness={0.55} transmission={0.58} thickness={0.2} transparent opacity={0.5} />
-          </mesh>
-        </Float>
-      </group>
-
-      <mesh position={[0, 0, -4.2]}>
-        <planeGeometry args={[24, 16]} />
-        <meshBasicMaterial color="#020305" transparent opacity={0.12} />
-      </mesh>
-    </>
-  );
-}
-
-function InteractiveBackground({ activity, mouse, focus, scroll }: InteractiveBackgroundProps) {
-  return (
-    <div className="pointer-events-none fixed inset-0 z-0">
-      <Canvas camera={{ position: [0, 0, 6], fov: 48 }} dpr={[1, 2]}>
-        <BackgroundScene activity={activity} mouse={mouse} focus={focus} scroll={scroll} />
-      </Canvas>
-    </div>
-  );
-}
 
 type ServiceCardProps = {
   service: {
@@ -466,56 +359,7 @@ type ServiceCardProps = {
   };
   index: number;
 };
-
-function ServiceCard({ service, index }: ServiceCardProps) {
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const Icon = service.icon;
-  const controls = useAnimation();
-  const [willChangeActive, setWillChangeActive] = useState(true);
-  const revealRef = useServiceReveal(() => controls.start('visible'));
-  const delay = ((index % 2) + Math.floor(index / 2)) * 0.08;
-
-  const handleMove = (event: React.MouseEvent<HTMLElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = (event.clientY - rect.top) / rect.height - 0.5;
-    const y = (event.clientX - rect.left) / rect.width - 0.5;
-    setTilt({ x: x * -8, y: y * 8 });
-  };
-
-  return (
-    <motion.article
-      ref={revealRef as React.RefObject<HTMLDivElement>}
-      initial="hidden"
-      animate={controls}
-      variants={{
-        hidden: { opacity: 0.15, y: 12 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.45, delay } }
-      }}
-      onAnimationComplete={() => setWillChangeActive(false)}
-      whileHover={{ y: -2, scale: 1.01 }}
-      onMouseMove={handleMove}
-      onMouseLeave={() => setTilt({ x: 0, y: 0 })}
-      className="revealer group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 transition-all duration-300 hover:border-blue-500/30"
-      style={{
-        willChange: willChangeActive ? 'opacity, transform' : 'auto',
-        rotateX: tilt.x,
-        rotateY: tilt.y,
-        transformPerspective: 1000
-      }}
-    >
-      <div className={`absolute inset-0 bg-gradient-to-br ${service.accent} opacity-70 transition duration-700 group-hover:scale-105`} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_56%)]" />
-      <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80" />
-      <div className="relative z-10">
-        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/10 ring-1 ring-white/10 transition duration-300 group-hover:border-blue-400/30 group-hover:ring-blue-400/20">
-          <Icon className="h-5 w-5" />
-        </div>
-        <h3 className="text-2xl font-semibold text-white">{service.title}</h3>
-        <p className="mt-3 max-w-xl text-base leading-7 text-white/70">{service.description}</p>
-      </div>
-    </motion.article>
-  );
-}
+ 
 
 function ParallaxCard({ children }: { children: ReactNode }) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -538,17 +382,49 @@ function ParallaxCard({ children }: { children: ReactNode }) {
   );
 }
 
-function SectionHeading({ children, className = '' }: { children: ReactNode; className?: string }) {
+function ServiceCard({ service, index }: ServiceCardProps) {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const Icon = service.icon;
+  const [ref, inView] = useInView({ threshold: 0.2, triggerOnce: true });
+  const delay = ((index % 2) + Math.floor(index / 2)) * 0.08;
+
+  const handleMove = (event: React.MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientY - rect.top) / rect.height - 0.5;
+    const y = (event.clientX - rect.left) / rect.width - 0.5;
+    setTilt({ x: x * -8, y: y * 8 });
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0.15, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.1, margin: '0px 0px -50px 0px' }}
-      transition={{ duration: 0.75, ease: 'easeOut' }}
-      className={className}
+    <motion.article
+      ref={ref}
+      initial="hidden"
+      animate={inView ? 'visible' : 'hidden'}
+      variants={{
+        hidden: { opacity: 0.15, y: 12 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.45, delay } }
+      }}
+      whileHover={{ y: -2, scale: 1.01 }}
+      onMouseMove={handleMove}
+      onMouseLeave={() => setTilt({ x: 0, y: 0 })}
+      className="revealer group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 transition-all duration-300 hover:border-blue-500/30"
+      style={{
+        rotateX: tilt.x,
+        rotateY: tilt.y,
+        transformPerspective: 1000
+      }}
     >
-      {children}
-    </motion.div>
+      <div className={`absolute inset-0 bg-gradient-to-br ${service.accent} opacity-70 transition duration-700 group-hover:scale-105`} />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_56%)]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80" />
+      <div className="relative z-10">
+        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/10 ring-1 ring-white/10 transition duration-300 group-hover:border-blue-400/30 group-hover:ring-blue-400/20">
+          <Icon className="h-5 w-5" />
+        </div>
+        <h3 className="text-2xl font-semibold text-white">{service.title}</h3>
+        <p className="mt-3 max-w-xl text-base leading-7 text-white/70">{service.description}</p>
+      </div>
+    </motion.article>
   );
 }
 
@@ -581,6 +457,8 @@ export default function App() {
   const [iframeError, setIframeError] = useState(false);
   const [projectFilter, setProjectFilter] = useState<string | null>(null);
   const [pageReady, setPageReady] = useState(true);
+  const [isSendingContact, setIsSendingContact] = useState(false);
+  const contactFormRef = useRef<HTMLFormElement | null>(null);
 
   const activeStepData = steps[activeStepIndex] ?? steps[0];
 
@@ -596,89 +474,211 @@ export default function App() {
     anchor?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const validateEmail = (email: string) => {
+    return /^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/.test(email);
+  };
+
+  const handleContactSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!contactFormRef.current) return;
+
+    const formData = new FormData(contactFormRef.current);
+    const name = String(formData.get('user_name') ?? '').trim();
+    const email = String(formData.get('user_email') ?? '').trim();
+    const budget = String(formData.get('user_budget') ?? '').trim();
+    const message = String(formData.get('message') ?? '').trim();
+
+    if (!name || !email || !budget || !message) {
+      toast.error('Please complete all required fields.');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    const replyToInput = contactFormRef.current.querySelector('input[name="reply_to"]') as HTMLInputElement | null;
+    if (replyToInput) {
+      replyToInput.value = email;
+    }
+
+    setIsSendingContact(true);
+
+    ReactGA.event({ category: 'Contact', action: 'Form Submitted' });
+
+    try {
+      await emailjs.sendForm(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        contactFormRef.current,
+        EMAILJS_PUBLIC_KEY
+      );
+      toast.success("Message sent! We'll be in touch within 24 hours.");
+      contactFormRef.current.reset();
+    } catch (error) {
+      console.error('EmailJS error:', error);
+      toast.error('Something went wrong. Please try WhatsApp instead.');
+    } finally {
+      setIsSendingContact(false);
+    }
+  };
+
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
-    const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
+    let lenis: any = null;
+    let rafId: number | null = null;
 
-    const handleMouseMove = (event: MouseEvent) => {
-      setMouse({
-        x: (event.clientX / window.innerWidth) - 0.5,
-        y: (event.clientY / window.innerHeight) - 0.5
-      });
-    };
+    let handleMouseMove: ((event: MouseEvent) => void) | null = null;
+    let handleScroll: (() => void) | null = null;
 
-    const handleScroll = () => {
-      setScroll(window.scrollY);
-    };
+    // Dynamically import heavy runtime libraries to reduce initial bundle size.
+    (async () => {
+      try {
+        const gsapModule = await import('gsap');
+        const ScrollTriggerModule = await import('gsap/ScrollTrigger');
+        const gsap: any = gsapModule && (gsapModule as any).default ? (gsapModule as any).default : gsapModule;
+        const ScrollTrigger: any = (ScrollTriggerModule && (ScrollTriggerModule as any).ScrollTrigger) || (ScrollTriggerModule as any).default || ScrollTriggerModule;
+        gsap.registerPlugin(ScrollTrigger);
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('scroll', handleScroll, { passive: true });
+        const lenisModule = await import('lenis');
+        const Lenis: any = (lenisModule as any).default ?? lenisModule;
 
-    gsap.utils.toArray<HTMLElement>('.counter').forEach((counter) => {
-      gsap.fromTo(
-        counter,
-        { textContent: '0', opacity: 0.15, y: 16 },
-        {
-          textContent: Number(counter.dataset.value),
-          opacity: 1,
-          y: 0,
-          duration: 1.1,
+        lenis = new Lenis({ duration: 1.2, easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+
+        function raf(time: number) {
+          lenis.raf(time);
+          rafId = requestAnimationFrame(raf);
+        }
+        rafId = requestAnimationFrame(raf);
+
+        handleMouseMove = (event: MouseEvent) => {
+          setMouse({ x: (event.clientX / window.innerWidth) - 0.5, y: (event.clientY / window.innerHeight) - 0.5 });
+        };
+
+        handleScroll = () => {
+          setScroll(window.scrollY);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Setup GSAP animations that rely on DOM
+        gsap.utils.toArray('.counter').forEach((counter: any) => {
+          gsap.fromTo(
+            counter,
+            { textContent: '0', opacity: 0.15, y: 16 },
+            {
+              textContent: Number(counter.dataset.value),
+              opacity: 1,
+              y: 0,
+              duration: 1.1,
+              ease: 'power3.out',
+              snap: { textContent: 1 },
+              scrollTrigger: {
+                trigger: counter,
+                start: 'top 85%',
+                once: true
+              }
+            }
+          );
+        });
+
+        gsap.from('.revealer', {
+          opacity: 0.15,
+          y: 40,
+          blur: 10,
+          duration: 1,
+          stagger: 0.14,
           ease: 'power3.out',
-          snap: { textContent: 1 },
           scrollTrigger: {
-            trigger: counter,
-            start: 'top 85%',
+            trigger: '.revealer',
+            start: 'top 90%',
             once: true
           }
-        }
-      );
-    });
-
-    gsap.from('.revealer', {
-      opacity: 0.15,
-      y: 40,
-      blur: 10,
-      duration: 1,
-      stagger: 0.14,
-      ease: 'power3.out',
-      scrollTrigger: {
-        trigger: '.revealer',
-        start: 'top 90%',
-        once: true
+        });
+      } catch (e) {
+        // If dynamic imports fail, degrade gracefully
+        // console.warn('Dynamic import failed', e);
       }
-    });
+    })();
 
     return () => {
-      lenis.destroy();
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('scroll', handleScroll);
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      if (rafId) cancelAnimationFrame(rafId);
+      if (lenis && typeof lenis.destroy === 'function') lenis.destroy();
+      if (handleMouseMove) window.removeEventListener('mousemove', handleMouseMove);
+      if (handleScroll) window.removeEventListener('scroll', handleScroll as EventListenerOrEventListenerObject);
+      try {
+        const tt: any = (window as any).gsapScrollTriggers;
+        if (tt && Array.isArray(tt)) tt.forEach((t: any) => t.kill && t.kill());
+      } catch (e) {
+        // ignore
+      }
     };
   }, []);
 
 
   const homePage = (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#050505] text-white opacity-100" style={{ opacity: pageReady ? 1 : 1 }}>
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+    <main className="relative min-h-screen overflow-x-hidden bg-transparent text-white opacity-100" style={{ opacity: pageReady ? 1 : 1 }}>
+      <Helmet>
+        <title>NovaCraft — Premium Software Development & AI Agency</title>
+        <meta name="description" content="We build premium software, AI systems, and digital products that scale. Based in India, working globally." />
+        <meta name="keywords" content="software development agency, AI agency, React development, web development India, Next.js agency" />
+        <link rel="canonical" href={APP_URL} />
+
+        <meta property="og:title" content="NovaCraft — Premium Software Development & AI Agency" />
+        <meta property="og:description" content="We build premium software, AI systems, and digital products that scale." />
+        <meta property="og:image" content={OG_IMAGE_URL} />
+        <meta property="og:url" content={APP_URL} />
+        <meta property="og:type" content="website" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="NovaCraft — Premium Software Development & AI Agency" />
+        <meta name="twitter:description" content="We build premium software, AI systems, and digital products that scale." />
+        <meta name="twitter:image" content={OG_IMAGE_URL} />
+
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "ProfessionalService",
+            "name": "NovaCraft",
+            "description": "Premium software development and AI agency",
+            "url": "${APP_URL}",
+            "logo": "${APP_URL}/logo.png",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer service",
+              "availableLanguage": ["English", "Hindi"]
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "IN"
+            },
+            "sameAs": [
+              "https://github.com/YOUR_GITHUB",
+              "https://linkedin.com/company/YOUR_LINKEDIN"
+            ]
+          }
+        `}</script>
+      </Helmet>
+      <motion.div className="fixed top-0 left-0 right-0 h-[2px] bg-blue-500 origin-left z-[100]" style={{ scaleX: useSpring(useScroll().scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 }) }} />
+      {/* Global fixed background video */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <video
-          className="h-full w-full scale-105 object-cover"
           autoPlay
-          loop
           muted
+          loop
           playsInline
           preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 0.40 }}
         >
-          <source src="/bg.mp4" type="video/mp4" />
+          <source src="/videos/bg.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_26%),linear-gradient(135deg,rgba(2,6,10,0.76)_0%,rgba(2,4,8,0.58)_45%,rgba(2,4,8,0.72)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.66)_0%,rgba(0,0,0,0.28)_48%,rgba(0,0,0,0.55)_100%)]" />
-        <div className="absolute inset-0 backdrop-blur-[1px]" />
+        <div className="absolute inset-0 bg-black/70" />
       </div>
       <section className="relative isolate z-10 min-h-screen overflow-hidden bg-transparent text-white">
         <video
@@ -696,7 +696,7 @@ export default function App() {
 
         <div className="relative z-10 flex min-h-screen flex-col px-6 pt-6 md:px-12 lg:px-16">
           <nav className="liquid-glass flex items-center justify-between rounded-xl px-4 py-2">
-            <div className="text-2xl font-semibold tracking-tight">Northstar Labs</div>
+            <div className="text-2xl font-semibold tracking-tight">NovaCraft</div>
             <div className="hidden items-center gap-8 text-sm text-white/80 md:flex">
               <a className="transition-colors hover:text-gray-300" href="#services">Services</a>
               <a className="transition-colors hover:text-gray-300" href="#projects">Projects</a>
@@ -726,8 +726,15 @@ export default function App() {
                 </FadeIn>
                 <FadeIn delay={1200} duration={1000}>
                   <div className="flex flex-wrap gap-4">
-                    <a className="liquid-glass rounded-lg px-8 py-3 font-medium text-white transition-colors hover:bg-white hover:text-black" href="#contact">
-                      Book a Strategy Call
+                    <a
+                      href={CALENDLY_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => ReactGA.event({ category: 'Contact', action: 'Book Call Clicked' })}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/20 px-8 py-3 text-white transition-all duration-300 hover:bg-white/10 group"
+                    >
+                      <CalendarDays size={16} className="group-hover:rotate-12 transition-transform duration-300" />
+                      Book a Free Call
                     </a>
                     <a className="rounded-lg border border-white/20 px-8 py-3 font-medium text-white transition-colors hover:bg-white/10" href="#projects">
                       Explore the Work
@@ -777,290 +784,26 @@ export default function App() {
         </div>
       </section>
 
-      <section id="process" data-scene-section="process" className="relative z-50 px-6 py-24 md:px-12 lg:px-16" style={{ opacity: 1 }}>
+      <Suspense fallback={<div className="py-20 text-center">Loading process…</div>}>
+        <ProcessSection
+          steps={steps}
+          activeStepIndex={activeStepIndex}
+          setActiveStepIndex={setActiveStepIndex}
+          onStepView={(label: string) => ReactGA.event({ category: 'Engagement', action: 'Process Step Viewed', label })}
+        />
+      </Suspense>
+
+      <Suspense fallback={<div className="py-10 text-center">Loading projects…</div>}>
+        <ProjectsSection
+          filteredProjects={filteredProjects}
+          projectFilter={projectFilter}
+          setProjectFilter={setProjectFilter}
+        />
+      </Suspense>
+
+      <section id="services" data-scene-section="services" className="relative z-20 px-6 py-24 md:px-12 lg:px-16">
         <div className="mx-auto max-w-7xl">
-          <div className="h-fit self-start">
-            <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/70">Sticky storytelling</p>
-            <div className="space-y-6">
-              <div className="text-3xl font-normal leading-tight text-white md:text-5xl">
-                A process designed to move from ambition to execution without friction.
-              </div>
-              <p className="text-base leading-7 text-white/80 max-w-3xl">
-                We combine strategic clarity, premium product design, and thoughtful engineering to build systems that feel effortless to use and durable in the long term.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-10 overflow-hidden rounded-[32px] border border-white/10 bg-slate-950/95 shadow-[0_50px_120px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-            <div className="grid grid-cols-6 divide-x divide-white/10 border-b border-white/10 bg-slate-950/75">
-              {steps.map((step, index) => {
-                const StepIcon = step.icon;
-                return (
-                  <button
-                    key={step.id}
-                    type="button"
-                    onClick={() => setActiveStepIndex(index)}
-                    className={`relative flex flex-col items-start gap-2 px-5 py-5 text-left transition duration-200 ${activeStepIndex === index ? 'bg-slate-900/95 text-white' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}
-                  >
-                    <span className={`text-[11px] font-semibold uppercase tracking-[0.35em] ${activeStepIndex === index ? 'text-blue-300' : 'text-white/40'}`}>
-                      {step.number}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <StepIcon size={16} className={activeStepIndex === index ? 'text-white' : 'text-white/40'} />
-                      <span className={`text-sm font-semibold tracking-[0.01em] ${activeStepIndex === index ? 'text-white' : 'text-white/40'}`}>{step.label}</span>
-                    </div>
-                    {activeStepIndex === index && <div className="absolute inset-x-0 bottom-0 h-1 bg-blue-500" />}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.95fr] gap-0 overflow-visible min-h-[520px]">
-              <div className="p-10 border-r border-white/10 bg-slate-950/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                <div className="space-y-8">
-                  <div className="flex flex-wrap items-center gap-3 text-white/40">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-500/10 text-blue-300">
-                      {React.createElement(activeStepData.icon, { size: 18, className: 'text-blue-300' })}
-                    </div>
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.35em] text-blue-300">
-                      {activeStepData.number} — {activeStepData.label}
-                    </span>
-                  </div>
-                  <div className="space-y-4">
-                    <h3 className="text-3xl md:text-4xl font-semibold text-white leading-tight">
-                      {activeStepData.heading}
-                    </h3>
-                    <p className="text-white text-base leading-relaxed max-w-2xl">
-                      {activeStepData.description}
-                    </p>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-white/40 mb-3">What you get</p>
-                    {activeStepData.deliverables.map((item, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <span className="mt-2 block h-2 w-2 rounded-full bg-blue-400 shrink-0" />
-                        <span className="text-sm text-white/70 leading-6">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-10 bg-slate-950/80 border-l border-white/10 flex flex-col justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                <div className="flex h-full flex-col justify-between">
-                  <div>
-                    <p className="text-xs tracking-widest text-white/30 uppercase mb-6">Typical Duration</p>
-                    <p className="text-5xl font-bold text-white">{activeStepData.duration}</p>
-                    <p className="text-white/30 text-sm mt-1">{activeStepData.durationLabel}</p>
-                  </div>
-                  <div className="mt-8">
-                    <p className="text-xs tracking-widest text-white/30 uppercase mb-4">Key Output</p>
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4">
-                      <p className="text-white/70 text-sm leading-relaxed italic">"{activeStepData.output}"</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="projects" data-scene-section="projects" className="relative px-6 py-10 lg:px-16 lg:py-12">
-        <div className="mx-auto max-w-[1500px] space-y-12">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-8 lg:gap-10 lg:items-stretch">
-            <motion.aside
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.05 }}
-              className="order-2 flex h-auto w-full flex-col rounded-[24px] border border-white/10 bg-white/5 p-9 shadow-[0_24px_80px_rgba(0,0,0,0.16)] backdrop-blur-xl lg:order-1"
-            >
-              <div className="flex min-h-0 flex-col text-white">
-                <div className="space-y-6">
-                  <div className="text-[11px] uppercase tracking-[0.35em] text-white/55">Featured Client Project</div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-400/10 px-3 py-2 text-[11px] font-semibold text-emerald-200 ring-1 ring-emerald-400/20">
-                    <span className="inline-flex h-3 w-3 rounded-full bg-emerald-400" />
-                    Completed & Delivered
-                  </div>
-                  <h2 className="text-[48px] font-bold leading-tight tracking-[-0.03em] text-white">Dental Clinic Website</h2>
-                  <p className="max-w-xl text-[14px] leading-tight text-white/70">
-                    A premium appointment-first website for a dental practice built to increase bookings, trust, and discovery.
-                  </p>
-                </div>
-
-                <div className="mt-6 grid grid-cols-3 gap-3 text-white/80">
-                  <div className="flex h-20 flex-col justify-center rounded-xl border border-white/10 bg-white/5 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.35em] text-white/55">Industry</p>
-                    <p className="mt-2 text-[13px] text-white">Healthcare</p>
-                  </div>
-                  <div className="flex h-20 flex-col justify-center rounded-xl border border-white/10 bg-white/5 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.35em] text-white/55">Duration</p>
-                    <p className="mt-2 text-[13px] text-white">2 Weeks</p>
-                  </div>
-                  <div className="flex h-20 flex-col justify-center rounded-xl border border-white/10 bg-white/5 p-4">
-                    <p className="text-[11px] uppercase tracking-[0.35em] text-white/55">Platform</p>
-                    <p className="mt-2 text-[13px] text-white">Responsive Website</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-4 lg:grid-cols-2 text-white/80">
-                  <div className="space-y-4">
-                    <p className="text-[11px] uppercase tracking-[0.35em] text-white/55">Services</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['Product Strategy', 'Platform Development', 'Analytics Integration', 'Performance Optimization'].map((service) => (
-                        <div key={service} className="flex h-12 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-[13px]">
-                          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                          {service}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <p className="text-[11px] uppercase tracking-[0.35em] text-white/55">Technologies</p>
-                    <div className="grid grid-cols-2 gap-2 text-[11px] uppercase tracking-[0.25em] text-white/75">
-                      {['React', 'Next.js', 'Tailwind CSS', 'Framer Motion', 'Vercel'].map((tech) => (
-                        <div key={tech} className="flex h-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 text-[11px] uppercase tracking-[0.25em]">
-                          {tech}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid gap-4">
-                  <div className="w-full rounded-xl border border-white/10 bg-slate-950/40 p-5 text-[13px] leading-tight text-white/70">
-                    <p className="text-[11px] uppercase tracking-[0.35em] text-white/55">Project Overview</p>
-                    <p className="mt-3 leading-tight">
-                      A modern dental website built to increase patient bookings, improve trust, and deliver a seamless experience across devices.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="w-full rounded-xl border border-white/10 bg-white/5 p-5 text-[13px] leading-tight text-white/70">
-                      <p className="text-[11px] uppercase tracking-[0.35em] text-white/55">Challenge</p>
-                      <p className="mt-3 leading-tight">
-                        No modern digital presence, unclear booking flow, and low patient trust.
-                      </p>
-                    </div>
-                    <div className="w-full rounded-xl border border-white/10 bg-white/5 p-5 text-[13px] leading-tight text-white/70">
-                      <p className="text-[11px] uppercase tracking-[0.35em] text-white/55">Solution</p>
-                      <p className="mt-3 leading-tight">
-                        Built a clean responsive website with easy appointment booking and clear service clarity.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3 text-[12px] text-white/85">
-                  {[
-                    'Higher Trust',
-                    'More Bookings',
-                    'Clear Care Messaging',
-                    'Faster Performance'
-                  ].map((label) => (
-                    <div key={label} className="flex h-20 items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 text-xs">✔</div>
-                      <p className="font-semibold leading-tight">{label}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-auto pt-4">
-                  <a
-                    href="https://dr-poojabala.netlify.app"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-[13px] font-semibold text-white transition duration-300 hover:bg-white/10"
-                  >
-                    Explore Work →
-                  </a>
-                </div>
-              </div>
-            </motion.aside>
-
-            <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              whileHover={{ y: -6, scale: 1.01 }}
-              className="order-1 flex min-h-0 h-full w-full flex-col rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[rgba(10,15,30,0.95)] shadow-[0_40px_120px_rgba(0,0,0,0.45)] transition duration-300 lg:order-2"
-            >
-              <div className="relative flex min-h-0 flex-1 w-full flex-col overflow-hidden rounded-[28px] border border-[rgba(255,255,255,0.08)] bg-[rgba(10,15,30,0.95)]">
-                <div className="relative flex h-[58px] items-center justify-center border-b border-[rgba(255,255,255,0.08)] bg-[rgba(10,15,30,0.95)] backdrop-blur-[20px] px-6">
-                  <div className="absolute left-6 flex items-center gap-3">
-                    <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-                    <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-                    <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-                  </div>
-                  <div className="absolute inset-x-0 flex justify-center">
-                    <div className="flex h-8 w-80 items-center justify-center rounded-full bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] px-4 text-[12px] uppercase tracking-[0.16em] text-white/80">
-                      DR-POOJABALA.NETLIFY.APP
-                    </div>
-                  </div>
-                </div>
-                <div className="relative flex min-h-0 flex-1 w-full overflow-hidden bg-slate-950">
-                  {!iframeError ? (
-                    <iframe
-                      ref={iframeRef}
-                      src="https://dr-poojabala.netlify.app"
-                      title="Dental Clinic Website Preview"
-                      onLoad={() => setIframeError(false)}
-                      onError={() => setIframeError(true)}
-                      className="absolute inset-0 h-full w-full border-none"
-                    />
-                  ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-950 text-center text-white">
-                        <div className="mx-auto max-w-xl px-8 py-10">
-                          <p className="text-xs uppercase tracking-[0.28em] text-white/50">Preview unavailable</p>
-                          <h3 className="mt-4 text-2xl font-semibold text-white">Website cannot be embedded</h3>
-                          <p className="mt-3 text-sm leading-6 text-white/70">
-                            The live site blocked iframe embedding. Use a static preview image or update the target site&apos;s embed headers for a reliable mockup.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          <div id="more-projects" className="space-y-8 text-center">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/55">More Projects</p>
-            <SectionHeading className="mx-auto max-w-3xl text-3xl font-normal leading-tight text-white md:text-5xl">
-              A selection of software, AI, analytics, and web work that feels premium, polished, and built to scale.
-            </SectionHeading>
-          </div>
-
-          {projectFilter && (
-            <div className="mb-4 flex flex-wrap items-center gap-3 text-white/75">
-              <button
-                type="button"
-                onClick={() => setProjectFilter(null)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
-              >
-                Clear filter
-              </button>
-              <span className="text-sm">
-                Showing {filteredProjects.length} project{filteredProjects.length === 1 ? '' : 's'} for "{projectFilter}"
-              </span>
-            </div>
-          )}
-
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
-            {filteredProjects.length > 0 ? (
-              filteredProjects.map((project, index) => (
-                <ProjectCard key={project.title} project={project} index={index} />
-              ))
-            ) : (
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-10 text-center text-sm text-white/70">
-                No projects match "{projectFilter}". Try another technology.
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section id="services" data-scene-section="services" className="px-6 py-24 md:px-12 lg:px-16">
-        <div className="mx-auto max-w-7xl">
-          <motion.div initial={{ opacity: 0.15, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1, margin: '0px 0px -50px 0px' }} transition={{ duration: 0.8 }} className="mb-10 max-w-3xl">
+          <motion.div initial={{ opacity: 0.15, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1, margin: '0px 0px -50px 0px' }} transition={{ duration: 0.8 }} className="relative z-20 mb-10 max-w-3xl">
             <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/55">Services</p>
             <SectionHeading className="text-3xl font-normal leading-tight text-white md:text-5xl">What we build</SectionHeading>
           </motion.div>
@@ -1072,7 +815,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="relative px-6 py-20 md:px-12 lg:px-16">
+      <section className="relative z-10 px-6 py-20 md:px-12 lg:px-16">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-[-5%] top-10 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl" />
           <div className="absolute right-0 top-24 h-56 w-56 rounded-full bg-fuchsia-400/10 blur-3xl" />
@@ -1113,7 +856,7 @@ export default function App() {
 
             {/* noise + soft gradient overlays */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.08),transparent_42%),radial-gradient(circle_at_bottom,rgba(168,85,247,0.05),transparent_36%)] mix-blend-overlay pointer-events-none" />
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 pointer-events-none" />
+            <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-10 pointer-events-none" />
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -left-20 -top-10 h-48 w-48 rounded-full bg-blue-400/8 blur-3xl opacity-8" />
               <div className="absolute right-8 bottom-6 h-36 w-36 rounded-full bg-pink-400/8 blur-3xl opacity-8" />
@@ -1213,23 +956,23 @@ export default function App() {
         </div>
       </section>
 
-      <section data-scene-section="why" className="px-6 py-24 md:px-12 lg:px-16">
+      <section data-scene-section="why" className="relative z-20 px-6 py-24 md:px-12 lg:px-16 opacity-100">
         <div className="mx-auto max-w-7xl space-y-6">
-          <motion.div initial={{ opacity: 0.15, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1, margin: '0px 0px -50px 0px' }} transition={{ duration: 0.8 }} className="max-w-4xl">
-            <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/55">Why Northstar Labs</p>
-            <SectionHeading className="text-3xl font-normal leading-tight text-white md:text-5xl">Strategy, design, and execution under one roof.</SectionHeading>
-          </motion.div>
+          <div className="max-w-4xl">
+            <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/55">Why NovaCraft</p>
+            <h2 className="text-3xl font-normal leading-tight text-white md:text-5xl">Strategy, design, and execution under one roof.</h2>
+          </div>
           <div className="space-y-4">
             {benefits.map((benefit, index) => (
-              <motion.div key={benefit} initial={{ opacity: 0.15, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1, margin: '0px 0px -50px 0px' }} transition={{ duration: 0.7, delay: Math.min(index * 0.05, 0.15) }} className="liquid-glass flex flex-col justify-between rounded-[1.5rem] border border-white/10 px-6 py-8 md:flex-row md:items-center">
+              <div key={benefit} className="liquid-glass flex flex-col justify-between rounded-[1.5rem] border border-white/10 px-6 py-8 md:flex-row md:items-center">
                 <div className="text-3xl font-semibold text-white md:text-4xl">0{index + 1}</div>
                 <div className="mt-4 text-2xl font-normal text-white md:mt-0 md:text-3xl">{benefit}</div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
-      <section id="contact" data-scene-section="contact" className="relative isolate px-6 py-24 md:px-12 lg:px-16">
+      <section id="contact" data-scene-section="contact" className="relative z-10 isolate px-6 py-24 md:px-12 lg:px-16">
         <video className="absolute inset-0 h-full w-full object-cover" autoPlay loop muted playsInline>
           <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4" type="video/mp4" />
         </video>
@@ -1242,41 +985,109 @@ export default function App() {
               Whether you need AI automation, custom software, analytics dashboards, or enterprise products, we are ready to help bring your vision to life.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <a className="liquid-glass rounded-lg px-8 py-3 font-medium text-white transition-colors hover:bg-white hover:text-black" href="mailto:hello@northstarlabs.com">Book Consultation</a>
-              <a className="rounded-lg border border-white/20 px-8 py-3 font-medium text-white transition-colors hover:bg-white/10" href="mailto:hello@northstarlabs.com">Start a Conversation</a>
+                    <a
+                      href={CALENDLY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => ReactGA.event({ category: 'Contact', action: 'Book Call Clicked' })}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/20 px-8 py-3 text-white transition-all duration-300 hover:bg-white/10 group"
+                    >
+                <CalendarDays size={16} className="group-hover:rotate-12 transition-transform duration-300" />
+                Book a Free Call
+              </a>
+              
             </div>
           </div>
 
-          <form className="liquid-glass rounded-[1.5rem] border border-white/10 p-6">
+          <form ref={contactFormRef} onSubmit={handleContactSubmit} className="liquid-glass rounded-[1.5rem] border border-white/10 p-6">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm text-white/70">
                 <span className="mb-2 block">Name</span>
-                <input className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none" placeholder="Your name" />
+                <input
+                  name="user_name"
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                  placeholder="Your name"
+                />
               </label>
               <label className="text-sm text-white/70">
                 <span className="mb-2 block">Email</span>
-                <input className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none" placeholder="you@company.com" />
+                <input
+                  name="user_email"
+                  type="email"
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                  placeholder="you@company.com"
+                />
+              </label>
+              <input type="hidden" name="reply_to" value="" />
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="text-sm text-white/70">
+                <span className="mb-2 block">Budget</span>
+                <select
+                  name="user_budget"
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                >
+                  <option value="">Select a budget</option>
+                  <option value="<$500">&lt;$500</option>
+                  <option value="$500–$2k">$500–$2k</option>
+                  <option value="$2k–$5k">$2k–$5k</option>
+                  <option value="$5k+">$5k+</option>
+                </select>
+              </label>
+              <label className="text-sm text-white/70">
+                <span className="mb-2 block">WhatsApp</span>
+                <input
+                  name="user_whatsapp"
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                  placeholder="Optional WhatsApp number"
+                />
               </label>
             </div>
             <label className="mt-4 block text-sm text-white/70">
-              <span className="mb-2 block">Company</span>
-              <input className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none" placeholder="Company name" />
+              <span className="mb-2 block">Message</span>
+              <textarea
+                name="message"
+                required
+                className="min-h-32 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                placeholder="Tell us about the challenge."
+              />
             </label>
-            <label className="mt-4 block text-sm text-white/70">
-              <span className="mb-2 block">Project Details</span>
-              <textarea className="min-h-32 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none" placeholder="Tell us about the challenge." />
-            </label>
-            <button className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-medium text-black transition-colors hover:bg-gray-100" type="button">
-              Submit <ArrowRight className="h-4 w-4" />
+            <button
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-medium text-black transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+              type="submit"
+              disabled={isSendingContact}
+            >
+              {isSendingContact ? 'Sending…' : 'Submit'} <ArrowRight className="h-4 w-4" />
             </button>
           </form>
         </div>
       </section>
 
+      <a
+        href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi%2C%20I%27m%20interested%20in%20working%20with%20you!`}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => ReactGA.event({ category: 'Contact', action: 'WhatsApp Clicked' })}
+        className="fixed bottom-6 left-6 z-50 inline-flex items-center gap-3 rounded-full bg-green-500 px-4 py-3 text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:bg-green-400 hover:scale-110"
+        title="Chat on WhatsApp"
+      >
+        <span className="absolute inset-0 rounded-full bg-green-400 opacity-20 animate-ping" />
+        <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white">
+          <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.116 1.526 5.845L.057 23.571a.5.5 0 00.625.601l5.865-1.539A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.812 9.812 0 01-5.012-1.376l-.36-.213-3.733.979.998-3.645-.234-.374A9.818 9.818 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z" />
+          </svg>
+        </span>
+        <span className="relative text-sm font-semibold">WhatsApp</span>
+      </a>
+
       <footer className="relative z-10 border-t border-white/10 px-6 py-8 text-sm text-white/60 md:px-12 lg:px-16">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="font-semibold text-white">Northstar Labs</div>
+            <div className="font-semibold text-white">NovaCraft</div>
             <div>AI • Software • Analytics</div>
           </div>
           <div className="flex flex-wrap gap-4">
@@ -1286,6 +1097,20 @@ export default function App() {
           </div>
         </div>
       </footer>
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '12px',
+            fontSize: '14px'
+          },
+          success: { iconTheme: { primary: '#22c55e', secondary: '#1a1a1a' } },
+          error: { iconTheme: { primary: '#ef4444', secondary: '#1a1a1a' } }
+        }}
+      />
     </main>
   );
 

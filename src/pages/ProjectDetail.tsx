@@ -31,11 +31,12 @@ function GalleryImage({ src, alt, initials, onOpen }: GalleryImageProps) {
       className="group aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-transparent p-0 text-left transition hover:border-white/20"
     >
       <img
-        src={src}
-        alt={alt}
-        onError={() => setErrored(true)}
-        className="h-full w-full rounded-xl object-cover transition duration-300 group-hover:scale-105"
-      />
+                    src={src}
+                    alt={alt}
+                    loading="lazy"
+                    onError={() => setErrored(true)}
+                    className="h-full w-full rounded-xl object-cover transition duration-300 group-hover:scale-105"
+                  />
     </button>
   );
 }
@@ -67,7 +68,7 @@ export default function ProjectDetail() {
         initial={{ opacity: 0.15, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="min-h-screen bg-[#050505] px-6 py-16 text-white"
+        className="min-h-screen bg-transparent px-6 py-16 text-white"
       >
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-white/10 bg-slate-950/70 p-10 text-center">
           <p className="text-sm uppercase tracking-[0.35em] text-white/55">Project not found</p>
@@ -88,7 +89,7 @@ export default function ProjectDetail() {
       initial={{ opacity: 0.15, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="min-h-screen bg-[#050505] px-6 py-10 text-white md:px-12 lg:px-16"
+      className="min-h-screen bg-transparent px-6 py-10 text-white md:px-12 lg:px-16"
     >
       <div className="mx-auto max-w-6xl space-y-10">
         <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-8 shadow-[0_40px_120px_rgba(0,0,0,0.45)] backdrop-blur-xl">
@@ -110,6 +111,7 @@ export default function ProjectDetail() {
                 <img
                   src={lightboxSrc}
                   alt="Project preview enlarged"
+                  loading="lazy"
                   className="max-h-[90vh] max-w-full rounded-3xl object-contain shadow-2xl"
                 />
               </motion.div>
@@ -224,7 +226,7 @@ export default function ProjectDetail() {
                 <a
                   href={project.liveUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   View Live Site

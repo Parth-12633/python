@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import ReactGA from 'react-ga4';
 import type { Project } from '../types';
 import { publicAsset } from '../utils/assetHelpers';
 
@@ -33,6 +34,7 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
         <img
           src={imageSrc}
           alt={project.title}
+          loading="lazy"
           onError={(event) => {
             event.currentTarget.onerror = null;
             setImageSrc(FALLBACK_IMAGE);
@@ -61,7 +63,10 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
       <div className="relative z-10 border-t border-white/10 p-6">
         <button
           type="button"
-          onClick={() => navigate(`/project/${project.slug}`)}
+          onClick={() => {
+            ReactGA.event({ category: 'Portfolio', action: 'Project Viewed', label: project.title });
+            navigate(`/project/${project.slug}`);
+          }}
           className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition duration-300 hover:bg-white/10"
         >
           View Project →

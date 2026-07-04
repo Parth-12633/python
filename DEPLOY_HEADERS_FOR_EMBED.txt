@@ -1,0 +1,12 @@
+# Netlify _headers snippet to allow framing from northstar app domain
+# Add this file to the root of the dr-poojabala.netlify.app repo and redeploy.
+/*
+  Content-Security-Policy: frame-ancestors https://yourdomain.com
+
+# To allow framing from any origin (less secure):
+# /*
+#   Content-Security-Policy: frame-ancestors *
+
+# Alternatively, use X-Frame-Options (older header):
+# /*
+#   X-Frame-Options: ALLOW-FROM https://yourdomain.com

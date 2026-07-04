@@ -6,7 +6,7 @@ const FALLBACK_IMAGE = 'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.
 
 export function ProjectDetailPage({ project, onBack }: { project: Project; onBack: () => void }) {
   return (
-    <div className="relative min-h-screen bg-[#050505] px-6 py-8 text-white md:px-12">
+    <div className="relative min-h-screen bg-transparent px-6 py-8 text-white md:px-12">
       <div className="mx-auto flex max-w-7xl flex-col gap-8">
         <div className="flex flex-col gap-6 rounded-[2rem] border border-white/10 bg-slate-950/95 p-6 shadow-[0_40px_120px_rgba(0,0,0,0.45)] backdrop-blur-xl md:p-10">
           <button onClick={onBack} className="self-start rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
@@ -64,6 +64,7 @@ export function ProjectDetailPage({ project, onBack }: { project: Project; onBac
                   <img
                     src={image}
                     alt={`${project.title} ${index + 1}`}
+                    loading="lazy"
                     onError={(event) => {
                       event.currentTarget.onerror = null;
                       event.currentTarget.src = FALLBACK_IMAGE;
