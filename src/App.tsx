@@ -102,29 +102,48 @@ function AnimatedHeading({ text, className = '', delay = 200, charDelay = 32 }: 
   }, [delay]);
 
   return (
-    <h1 className={className} style={{ letterSpacing: '-0.04em' }}>
-      {lines.map((line, lineIndex) => (
-        <span key={lineIndex} className="block">
-          {line.split('').map((char, charIndex) => {
-            const transitionDelay = lineIndex * line.length * charDelay + charIndex * charDelay;
-            return (
-              <span
-                key={`${lineIndex}-${charIndex}`}
-                className="inline-block"
-                style={{
-                  opacity: visible ? 1 : 0,
-                  transform: visible ? 'translateX(0)' : 'translateX(-18px)',
-                  transition: 'opacity 500ms ease, transform 500ms ease',
-                  transitionDelay: `${transitionDelay}ms`,
-                  whiteSpace: char === ' ' ? 'pre' : 'normal'
-                }}
-              >
-                {char === ' ' ? '\u00A0' : char}
-              </span>
-            );
-          })}
-        </span>
-      ))}
+    <h1
+      className={className}
+      style={{
+        letterSpacing: '-0.04em',
+        wordBreak: 'keep-all',
+        overflowWrap: 'normal',
+        whiteSpace: 'normal'
+      }}
+    >
+      {lines.map((line, lineIndex) => {
+        const words = line.split(' ');
+        let cumulativeChars = 0;
+
+        return (
+          <span key={lineIndex} className="block">
+            {words.map((word, wordIndex) => {
+              const transitionDelay = (lineIndex * line.length + cumulativeChars) * charDelay;
+              cumulativeChars += word.length + 1;
+
+              return (
+                <React.Fragment key={`${lineIndex}-${wordIndex}`}>
+                  <span
+                    className="inline-block"
+                    style={{
+                      opacity: visible ? 1 : 0,
+                      transform: visible ? 'translateX(0)' : 'translateX(-18px)',
+                      transition: 'opacity 500ms ease, transform 500ms ease',
+                      transitionDelay: `${transitionDelay}ms`,
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'normal',
+                      whiteSpace: 'normal'
+                    }}
+                  >
+                    {word}
+                  </span>
+                  {wordIndex < words.length - 1 ? ' ' : ''}
+                </React.Fragment>
+              );
+            })}
+          </span>
+        );
+      })}
     </h1>
   );
 }
@@ -680,7 +699,7 @@ export default function App() {
         </video>
         <div className="absolute inset-0 bg-black/70" />
       </div>
-      <section className="relative isolate z-10 min-h-screen overflow-hidden bg-transparent text-white">
+      <section className="relative isolate z-10 hero-min-height overflow-hidden bg-transparent text-white">
         <video
           className="absolute inset-0 h-full w-full scale-105 object-cover"
           autoPlay
@@ -694,7 +713,7 @@ export default function App() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.58)_42%,rgba(0,0,0,0.24)_100%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_30%)]" />
 
-        <div className="relative z-10 flex min-h-screen flex-col px-6 pt-6 md:px-12 lg:px-16">
+        <div className="relative z-10 flex min-h-full flex-col px-6 pt-6 md:px-12 lg:px-16">
           <nav className="liquid-glass flex items-center justify-between rounded-xl px-4 py-2">
             <div className="text-2xl font-semibold tracking-tight">NovaCraft</div>
             <div className="hidden items-center gap-8 text-sm text-white/80 md:flex">
@@ -709,8 +728,8 @@ export default function App() {
             </a>
           </nav>
 
-          <div className="flex flex-1 flex-col justify-end pb-12 lg:pb-16">
-            <div className="mt-16 grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
+          <div className="flex flex-1 flex-col justify-center pt-[19vh] pb-6 lg:pb-8">
+            <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
               <div className="max-w-4xl">
                 <div className="mb-4 text-xs uppercase tracking-[0.3em] text-white/60">Software • AI • Product</div>
                 <AnimatedHeading

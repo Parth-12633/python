@@ -14,6 +14,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.hero-min-height {
+  min-height: 100dvh;
+  min-height: 100svh;
+  min-height: 100vh;
+}
+
 html {
   scroll-behavior: smooth;
 }
