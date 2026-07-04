@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, lazy, Suspense, type ReactNode } from 'react';
-import { motion, useAnimation, useScroll, useSpring } from 'framer-motion';
+import { AnimatePresence, motion, useAnimation, useScroll, useSpring } from 'framer-motion';
 // Heavy libraries (gsap, lenis, three, react-three) are loaded dynamically for performance.
 import emailjs from '@emailjs/browser';
 import { toast, Toaster } from 'react-hot-toast';
@@ -30,7 +30,9 @@ import {
   Server,
   ShieldCheck,
   Sparkles,
-  Workflow
+  Workflow,
+  Menu,
+  X
 } from 'lucide-react';
 import type { IconType } from 'react-icons';
 import {
@@ -476,10 +478,18 @@ export default function App() {
   const [iframeError, setIframeError] = useState(false);
   const [projectFilter, setProjectFilter] = useState<string | null>(null);
   const [pageReady, setPageReady] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSendingContact, setIsSendingContact] = useState(false);
   const contactFormRef = useRef<HTMLFormElement | null>(null);
 
   const activeStepData = steps[activeStepIndex] ?? steps[0];
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
 
   const filteredProjects = projectFilter
     ? moreProjects.filter((project) =>
@@ -714,19 +724,74 @@ export default function App() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_30%)]" />
 
         <div className="relative z-10 flex min-h-full flex-col px-6 pt-6 md:px-12 lg:px-16">
-          <nav className="liquid-glass flex items-center justify-between rounded-xl px-4 py-2">
+          <nav className="liquid-glass flex h-16 items-center justify-between rounded-xl px-4 py-2 lg:h-auto">
             <div className="text-2xl font-semibold tracking-tight">NovaCraft</div>
-            <div className="hidden items-center gap-8 text-sm text-white/80 md:flex">
+            <div className="hidden items-center gap-8 text-sm text-white/80 lg:flex">
               <a className="transition-colors hover:text-gray-300" href="#services">Services</a>
               <a className="transition-colors hover:text-gray-300" href="#projects">Projects</a>
               <a className="transition-colors hover:text-gray-300" href="#process">Process</a>
               <a className="transition-colors hover:text-gray-300" href="#about">About</a>
               <a className="transition-colors hover:text-gray-300" href="#contact">Contact</a>
             </div>
-            <a className="liquid-glass rounded-lg px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-white hover:text-black" href="#contact">
-              Book Consultation
-            </a>
+            <div className="flex items-center gap-3">
+              <a className="hidden rounded-lg border border-white/20 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-white hover:text-black lg:inline-flex" href="#contact">
+                Book Consultation
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10 lg:hidden"
+                aria-expanded={isMobileMenuOpen}
+                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              >
+                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
           </nav>
+
+          <AnimatePresence>
+            {isMobileMenuOpen && (
+              <motion.div
+                key="mobile-menu"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="fixed inset-0 z-50 overflow-hidden bg-black/70 backdrop-blur-xl px-5 py-6 lg:hidden"
+              >
+                <div className="mx-auto flex h-full max-w-3xl flex-col gap-10 rounded-3xl border border-white/10 bg-black/90 p-6 shadow-2xl shadow-black/40">
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-semibold tracking-tight text-white">NovaCraft</div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10"
+                      aria-label="Close menu"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-5 text-lg font-medium text-white">
+                    <a href="#" onClick={() => setIsMobileMenuOpen(false)} className="transition-colors hover:text-gray-300">Home</a>
+                    <a href="#services" onClick={() => setIsMobileMenuOpen(false)} className="transition-colors hover:text-gray-300">Services</a>
+                    <a href="#projects" onClick={() => setIsMobileMenuOpen(false)} className="transition-colors hover:text-gray-300">Projects</a>
+                    <a href="#process" onClick={() => setIsMobileMenuOpen(false)} className="transition-colors hover:text-gray-300">Process</a>
+                    <a href="#about" onClick={() => setIsMobileMenuOpen(false)} className="transition-colors hover:text-gray-300">About</a>
+                    <a href="#contact" onClick={() => setIsMobileMenuOpen(false)} className="transition-colors hover:text-gray-300">Contact</a>
+                  </div>
+
+                  <a
+                    href="#contact"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="inline-flex w-full items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 py-4 text-center text-base font-semibold text-white transition-colors hover:bg-white/15"
+                  >
+                    Book Consultation
+                  </a>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="flex flex-1 flex-col justify-center pt-[19vh] pb-6 lg:pb-8">
             <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
