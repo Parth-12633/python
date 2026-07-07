@@ -1150,8 +1150,7 @@ export default function App() {
         </div>
       </section>
 
-      <a
-        href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi%2C%20I%27m%20interested%20in%20working%20with%20you!`}
+      <ahref={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20NovaCraft%20Studio,%0A%0AI%20found%20your%20website%20and%20would%20like%20to%20discuss%20my%20project.%0A%0A•%20Name:%0A•%20Company:%0A•%20Service%20Required:%0A•%20Budget:%0A•%20Brief%20Requirement:%0A%0ALooking%20forward%20to%20hearing%20from%20you.`}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => ReactGA.event({ category: 'Contact', action: 'WhatsApp Clicked' })}
