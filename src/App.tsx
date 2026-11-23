@@ -1255,6 +1255,24 @@ export default function App() {
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/40">Featured Client Work</p>
               <ul className="space-y-2.5 text-xs">
                 <li>
+                  <a href="https://darshvk12.github.io/dr-kabir-anand/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
+                    <span>Dr. Kabir Anand (Cardiology)</span>
+                    <span className="text-[10px] text-rose-400 border border-rose-500/30 px-1 py-0.2 rounded">Live ↗</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://darshvk12.github.io/dr-ruchit-shah/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
+                    <span>Dr. Ruchit Shah (Orthopaedics)</span>
+                    <span className="text-[10px] text-amber-400 border border-amber-500/30 px-1 py-0.2 rounded">Live ↗</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://valence-atelier.vercel.app/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
+                    <span>Valence Atelier (Architecture)</span>
+                    <span className="text-[10px] text-cyan-400 border border-cyan-500/30 px-1 py-0.2 rounded">Live ↗</span>
+                  </a>
+                </li>
+                <li>
                   <a href="https://drpoojabala.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
                     <span>Dr. Pooja Bala Dental Clinic</span>
                     <span className="text-[10px] text-emerald-400 border border-emerald-500/30 px-1 py-0.2 rounded">Live ↗</span>
@@ -1273,8 +1291,7 @@ export default function App() {
                   </a>
                 </li>
                 <li><a href="#projects" className="transition-colors hover:text-white">Aurevo Minerals (B2B Catalog)</a></li>
-                <li><a href="#projects" className="transition-colors hover:text-white">InterviewIQ (Voice AI Simulation)</a></li>
-                <li><a href="#projects" className="transition-colors hover:text-white">Grocery Operations Management</a></li>
+                <li><a href="#projects" className="transition-colors hover:text-white">InterviewIQ (Voice AI Engine)</a></li>
               </ul>
 
               <div className="pt-3 border-t border-white/10">

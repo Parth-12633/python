@@ -2,6 +2,96 @@ import type { Project } from '../types';
 
 export const projectsData: Project[] = [
   {
+    id: 'dr-kabir-anand',
+    slug: 'dr-kabir-anand',
+    badge: 'CLIENT PROJECT',
+    status: 'CLIENT PROJECT',
+    initials: 'KA',
+    title: 'Dr. Kabir Anand — Interventional Cardiologist',
+    description: 'An editorial clinical portfolio for a leading Mumbai interventional cardiologist, featuring interactive ECG canvas physics, consultation scheduling, and patient pathways.',
+    tags: ['JavaScript', 'GSAP', 'Lenis', 'Canvas API', 'Healthcare'],
+    category: 'Healthcare & Cardiology',
+    technologies: ['HTML5', 'Modern CSS', 'JavaScript', 'GSAP', 'Lenis', 'HTML5 Canvas'],
+    duration: '2 Weeks',
+    platform: 'Responsive Web Experience',
+    overview: 'A bespoke medical portfolio engineered for Dr. Kabir Anand, a leading interventional cardiologist in Mumbai with 20 years of practice in complex angioplasty, structural heart interventions, and preventive cardiology at Meridian Heart Institute, Bandra West. The platform translates intricate cardiac procedures into reassuring, patient-first visual narratives, featuring real-time canvas ECG waves, bespoke appointment booking, and an emergency triage hotline.',
+    challenge: 'Cardiology patients often feel overwhelmed by clinical jargon and anxious about invasive heart procedures. Dr. Anand needed a digital home that communicates quiet authority, deep surgical experience, and empathetic care while streamlining consultation bookings.',
+    solution: 'Designed and crafted a high-performance web experience pairing editorial typography (Fraunces & Manrope) with a dynamic canvas ECG wave, an interactive heartbeat preloader, procedure walkthrough guides, transparent patient journeys, and direct WhatsApp/clinic scheduling.',
+    results: [
+      'Interactive canvas ECG and 60fps micro-animations with GSAP & Lenis',
+      'High conversion on online consultation and second-opinion requests',
+      'Clear, reassuring clinical guidance for complex angioplasty patients',
+      'Seamless mobile appointment booking with WhatsApp integration'
+    ],
+    previewImage: '/projects/kabir.png',
+    liveUrl: 'https://darshvk12.github.io/dr-kabir-anand/',
+    images: [
+      '/projects/kabir1.png',
+      '/projects/kabir2.png',
+      '/projects/kabir3.png'
+    ]
+  },
+  {
+    id: 'dr-ruchit-shah',
+    slug: 'dr-ruchit-shah',
+    badge: 'CLIENT PROJECT',
+    status: 'CLIENT PROJECT',
+    initials: 'RS',
+    title: 'Dr. Ruchit Shah — Orthopaedic & Spine Surgeon',
+    description: 'A refined orthopaedic practice platform for a gold medallist spine and joint replacement surgeon at 206 Reasons Orthocare Clinic, Mumbai.',
+    tags: ['JavaScript', 'CSS3', 'Vercel', 'Healthcare'],
+    category: 'Healthcare & Orthopaedics',
+    technologies: ['HTML5', 'CSS Custom Properties', 'JavaScript', 'Lenis', 'Vercel'],
+    duration: '2 Weeks',
+    platform: 'Responsive Web Platform',
+    overview: 'An authoritative, human-centric web portal for Dr. Ruchit Shah (MBBS, MS Orthopaedics, Gold Medallist), consulting at 206 Reasons Orthocare Clinic, Forjett Street, Mumbai. Specialized in minimally invasive spine surgery, robotic joint replacements, and sports injury rehabilitation, the site delivers clear treatment pathways, an interactive bone-counter preloader, surgical credentials, and verified patient FAQ guides.',
+    challenge: 'Patients dealing with chronic spine and joint pain seek immediate credibility, transparent non-surgical vs. surgical options, and frictionless consultation booking without clinical intimidation.',
+    solution: 'Engineered an accessible, high-contrast dark theme (#080d16 / amber) utilizing Archivo & Instrument Serif typography, an interactive anatomical condition navigator, one-click Practo and WhatsApp appointment booking, and clinic location guides.',
+    results: [
+      'Substantial rise in qualified outpatient and surgical consultation bookings',
+      'Dynamic bone-counter loader and custom magnetic interaction design',
+      'Comprehensive educational guides on knee replacement and spine care',
+      'Full mobile responsiveness and rapid sub-second page load times'
+    ],
+    previewImage: '/projects/ruchit.png',
+    liveUrl: 'https://darshvk12.github.io/dr-ruchit-shah/',
+    images: [
+      '/projects/ruchit1.png',
+      '/projects/ruchit2.png',
+      '/projects/ruchit3.png'
+    ]
+  },
+  {
+    id: 'valence-atelier',
+    slug: 'valence-atelier',
+    badge: 'CLIENT PROJECT',
+    status: 'CLIENT PROJECT',
+    initials: 'VA',
+    title: 'Valence Atelier — Monolithic Architecture',
+    description: 'A brutalist luxury digital sanctuary for an architectural atelier crafting monolithic subterranean stepwell pavilions across Mumbai, Zurich, and Kyoto.',
+    tags: ['JavaScript', 'Syne', 'Brutalism', 'Architecture'],
+    category: 'Architecture & Spatial Design',
+    technologies: ['HTML5', 'Modern CSS', 'JavaScript', 'Lenis', 'Lucide Icons', 'Vercel'],
+    duration: '3 Weeks',
+    platform: 'Luxury Portfolio Platform',
+    overview: 'Valence Atelier is a premier architectural practice creating bespoke monolithic spatial architecture, subterranean stepwell pavilions, and climate-resilient private sanctuaries engineered for geologic permanence. Headquartered in Mumbai with active commissions in Zurich and Kyoto, the digital atelier reflects their philosophy of brutalist permanence, tectonic stone craftsmanship, and serene light-carved voids.',
+    challenge: 'The studio required a digital presence that stood radically apart from commercial architecture templates — a heavy, visceral experience capturing raw basalt stone textures, architectural silence, and gallery-level project exhibits.',
+    solution: 'Built a bespoke minimalist experience featuring custom magnetic fluid cursor interactions, Syne bold typography, high-definition architectural imagery, smooth inertial scrolling via Lenis, project case archives, and multi-city studio contacts.',
+    results: [
+      'Acclaimed brutalist aesthetic matching the atelier’s spatial philosophy',
+      'Smooth 60fps inertial scrolling and magnetic interactive cursor',
+      'Showcases private sanctuaries and subterranean pavilions across 3 continents',
+      'Deployed on Vercel with zero performance bottlenecks'
+    ],
+    previewImage: '/projects/valence.png',
+    liveUrl: 'https://valence-atelier.vercel.app/',
+    images: [
+      '/projects/valence1.png',
+      '/projects/valence2.png',
+      '/projects/valence3.png'
+    ]
+  },
+  {
     id: 'dr-pooja-bala-dental-clinic',
     slug: 'dr-pooja-bala-dental-clinic',
     badge: 'CLIENT PROJECT',
@@ -26,6 +116,7 @@ export const projectsData: Project[] = [
     previewImage: '/projects/dental.png',
     liveUrl: 'https://drpoojabala.com',
     images: [
+      '/projects/dental-clinic.png',
       '/projects/dental1.png',
       '/projects/dental2.png',
       '/projects/dental3.png',
