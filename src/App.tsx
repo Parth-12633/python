@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, lazy, Suspense, type ReactNode } from 'react';
+import React, { useEffect, useRef, useState, useMemo, lazy, Suspense, type ReactNode } from 'react';
 import { AnimatePresence, motion, useAnimation, useScroll, useSpring } from 'framer-motion';
 // Heavy libraries (gsap, lenis, three, react-three) are loaded dynamically for performance.
 import emailjs from '@emailjs/browser';
@@ -13,26 +13,39 @@ import {
   BrainCircuit,
   CalendarDays,
   ChartNoAxesCombined,
+  Check,
+  CheckCircle2,
+  ChevronUp,
+  Clock,
   Box,
   Code2,
   Cloud,
   Compass,
+  Cpu,
   Database,
+  ExternalLink,
   FileCode,
+  FileText,
+  FolderGit2,
   GitBranch,
   Gauge,
+  Globe,
   LayoutGrid,
   Layers,
+  Lock,
+  Menu,
   Monitor,
   MonitorPlay,
   Rocket,
   Search,
   Server,
+  Shield,
   ShieldCheck,
   Sparkles,
+  Users,
   Workflow,
-  Menu,
-  X
+  X,
+  Zap
 } from 'lucide-react';
 import type { IconType } from 'react-icons';
 import {
@@ -94,14 +107,25 @@ type AnimatedHeadingProps = {
   charDelay?: number;
 };
 
-function AnimatedHeading({ text, className = '', delay = 200, charDelay = 32 }: AnimatedHeadingProps) {
+function AnimatedHeading({ text, className = '', delay = 200, charDelay = 28 }: AnimatedHeadingProps) {
   const [visible, setVisible] = useState(false);
-  const lines = text.split('\n');
 
   useEffect(() => {
     const timer = window.setTimeout(() => setVisible(true), delay);
     return () => window.clearTimeout(timer);
   }, [delay]);
+
+  const linesWithDelays = useMemo(() => {
+    let runningCharIndex = 0;
+    return text.split('\n').map((line) => {
+      const words = line.split(' ');
+      return words.map((word) => {
+        const wordDelay = runningCharIndex * charDelay;
+        runningCharIndex += word.length + 1;
+        return { word, delay: wordDelay };
+      });
+    });
+  }, [text, charDelay]);
 
   return (
     <h1
@@ -113,39 +137,29 @@ function AnimatedHeading({ text, className = '', delay = 200, charDelay = 32 }: 
         whiteSpace: 'normal'
       }}
     >
-      {lines.map((line, lineIndex) => {
-        const words = line.split(' ');
-        let cumulativeChars = 0;
-
-        return (
-          <span key={lineIndex} className="block">
-            {words.map((word, wordIndex) => {
-              const transitionDelay = (lineIndex * line.length + cumulativeChars) * charDelay;
-              cumulativeChars += word.length + 1;
-
-              return (
-                <React.Fragment key={`${lineIndex}-${wordIndex}`}>
-                  <span
-                    className="inline-block"
-                    style={{
-                      opacity: visible ? 1 : 0,
-                      transform: visible ? 'translateX(0)' : 'translateX(-18px)',
-                      transition: 'opacity 500ms ease, transform 500ms ease',
-                      transitionDelay: `${transitionDelay}ms`,
-                      wordBreak: 'keep-all',
-                      overflowWrap: 'normal',
-                      whiteSpace: 'normal'
-                    }}
-                  >
-                    {word}
-                  </span>
-                  {wordIndex < words.length - 1 ? ' ' : ''}
-                </React.Fragment>
-              );
-            })}
-          </span>
-        );
-      })}
+      {linesWithDelays.map((words, lineIndex) => (
+        <span key={lineIndex} className="block">
+          {words.map(({ word, delay: wordDelay }, wordIndex) => (
+            <React.Fragment key={`${lineIndex}-${wordIndex}`}>
+              <span
+                className="inline-block"
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? 'translateX(0)' : 'translateX(-18px)',
+                  transition: 'opacity 500ms ease, transform 500ms ease',
+                  transitionDelay: `${wordDelay}ms`,
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'normal',
+                  whiteSpace: 'normal'
+                }}
+              >
+                {word}
+              </span>
+              {wordIndex < words.length - 1 ? ' ' : ''}
+            </React.Fragment>
+          ))}
+        </span>
+      ))}
     </h1>
   );
 }
@@ -174,11 +188,31 @@ function FadeIn({ children, delay = 0, duration = 1000 }: FadeInProps) {
   );
 }
 
-const metrics = [
-  { value: '12+', label: 'Product Launches' },
-  { value: '4.9★', label: 'Client Rating' },
-  { value: '27%', label: 'Efficiency Lift' },
-  { value: '98%', label: 'Retention Rate' }
+const agencyMetrics = [
+  {
+    icon: Rocket,
+    value: '20+',
+    label: 'Projects Delivered',
+    description: 'Custom SaaS, enterprise ERPs, clinical portals, and AI systems built for real businesses.'
+  },
+  {
+    icon: Zap,
+    value: '2–4 Wks',
+    label: 'Average Sprint',
+    description: 'Milestone-driven execution delivering testable staging deployments every week.'
+  },
+  {
+    icon: ShieldCheck,
+    value: '99%',
+    label: 'Performance Score',
+    description: 'Engineered for high availability, sub-second responses, and fault-tolerant cloud scale.'
+  },
+  {
+    icon: Code2,
+    value: '100%',
+    label: 'Code Ownership',
+    description: 'Clean TypeScript & Python codebases, comprehensive documentation, and zero vendor lock-in.'
+  }
 ];
 
 const steps = [
@@ -480,6 +514,7 @@ export default function App() {
   const [pageReady, setPageReady] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSendingContact, setIsSendingContact] = useState(false);
+  const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | 'cookies' | 'security' | null>(null);
   const contactFormRef = useRef<HTMLFormElement | null>(null);
 
   const activeStepData = steps[activeStepIndex] ?? steps[0];
@@ -514,10 +549,9 @@ export default function App() {
     const formData = new FormData(contactFormRef.current);
     const name = String(formData.get('user_name') ?? '').trim();
     const email = String(formData.get('user_email') ?? '').trim();
-    const budget = String(formData.get('user_budget') ?? '').trim();
     const message = String(formData.get('message') ?? '').trim();
 
-    if (!name || !email || !budget || !message) {
+    if (!name || !email || !message) {
       toast.error('Please complete all required fields.');
       return;
     }
@@ -849,21 +883,47 @@ export default function App() {
         </div>
           </section>
 
-            <section id="about" data-scene-section="about" className="relative z-20 px-6 py-24 md:px-12 lg:px-16">
-        <div className="mx-auto max-w-6xl">
-          <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/55">Agency metrics</p>
-          <h2 className="max-w-4xl text-3xl font-normal leading-tight text-white md:text-5xl">
-              Built to launch modern digital products, enterprise platforms, and AI-powered solutions.
-          </h2>
-          <div className="mt-12 grid gap-8 border-t border-white/10 pt-12 md:grid-cols-4">
-            {metrics.map((metric) => (
-              <div key={metric.label} className="border-b border-white/10 pb-6 md:border-b-0 md:pb-0">
-                <div data-value={metric.value.replace(/\D/g, '')} className="counter text-4xl font-semibold text-white md:text-5xl">
-                  {metric.value.replace(/\D/g, '')}
+      <section id="about" data-scene-section="about" className="relative z-20 px-6 py-12 md:py-16 md:px-12 lg:px-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+            <div className="max-w-2xl">
+              <p className="mb-2 text-xs uppercase tracking-[0.3em] text-white/55">Agency Metrics</p>
+              <h2 className="text-2xl font-normal leading-tight text-white md:text-4xl">
+                Built to launch modern digital products, enterprise platforms, and AI-powered solutions.
+              </h2>
+            </div>
+            <p className="text-sm text-white/60 max-w-md">
+              We eliminate bloated agency overhead with direct senior engineering, milestone-driven sprints, and production-ready code from day one.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {agencyMetrics.map((card) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  key={card.label}
+                  className="liquid-glass group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6 transition-all duration-300 hover:border-white/20 hover:-translate-y-1 hover:bg-white/[0.05]"
+                >
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/90 group-hover:border-white/20 group-hover:text-white transition-colors">
+                      <Icon size={18} />
+                    </div>
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-white/60 bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-full">
+                      {card.label}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold tracking-tight text-white font-mono">
+                      {card.value}
+                    </div>
+                    <p className="mt-2 text-xs leading-relaxed text-white/60">
+                      {card.description}
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm uppercase tracking-[0.24em] text-white/70">{metric.label}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -899,148 +959,88 @@ export default function App() {
         </div>
       </section>
 
-      <section className="relative z-10 px-6 py-20 md:px-12 lg:px-16">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-[-5%] top-10 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl" />
-          <div className="absolute right-0 top-24 h-56 w-56 rounded-full bg-fuchsia-400/10 blur-3xl" />
-          <div className="absolute left-[40%] top-14 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute right-[20%] top-[55%] h-2 w-2 rounded-full bg-white/40" />
-          <div className="absolute left-[22%] top-[44%] h-1.5 w-1.5 rounded-full bg-white/40" />
-          <div className="absolute left-[75%] top-[34%] h-1.5 w-1.5 rounded-full bg-white/30" />
-          <div className="absolute left-[60%] top-[68%] h-1.5 w-1.5 rounded-full bg-white/30" />
-        </div>
-
+      <section id="tech-stack" className="relative z-10 px-6 py-16 md:px-12 lg:px-16">
         <div className="relative mx-auto max-w-[1500px]">
-          <motion.div initial={{ opacity: 0.15, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1, margin: '0px 0px -50px 0px' }} transition={{ duration: 0.8 }} className="mb-14 max-w-[680px]">
-            <p className="mb-4 text-xs uppercase tracking-[0.35em] text-white/55">Technology stack</p>
-            <SectionHeading className="text-4xl font-semibold leading-tight text-white md:text-6xl">Built with modern tooling and sharp execution.</SectionHeading>
-            <p className="mt-6 text-base leading-8 text-white/65">
-              We use a carefully selected technology ecosystem to build scalable, high-performance digital products—from modern web applications to AI-powered solutions.
+          <div className="mb-10 max-w-[680px]">
+            <p className="mb-3 text-xs uppercase tracking-[0.35em] text-white/55">Technology Stack</p>
+            <SectionHeading className="text-3xl font-semibold leading-tight text-white md:text-5xl">
+              Modern tooling, zero legacy baggage, sharp execution.
+            </SectionHeading>
+            <p className="mt-4 text-sm leading-relaxed text-white/65">
+              We select mature, high-performance technologies built for scale, reliability, and developer ergonomics. Click any technology badge to view matching agency case studies.
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0.15, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.1, margin: '0px 0px -50px 0px' }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="relative mx-auto w-[95vw] max-w-[1600px] overflow-hidden rounded-[32px] border border-white/8 bg-slate-950/75 px-6 py-12 shadow-[0_50px_130px_rgba(2,6,23,0.8)] backdrop-blur-[40px] md:px-12 md:py-16"
-          >
-            {/* subtle animated central glow */}
-            <motion.div
-              className="pointer-events-none absolute inset-0 flex items-center justify-center"
-              animate={{ scale: [1, 1.015, 1], opacity: [0.05, 0.1, 0.05] }}
-              transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <div
-                className="h-[560px] w-[560px] rounded-full blur-3xl"
-                style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.06), transparent 35%)', opacity: 0.28 }}
-              />
-            </motion.div>
+          <div className="relative mx-auto w-full overflow-hidden rounded-[28px] border border-white/10 bg-[#090d1a]/95 p-6 md:p-10 shadow-2xl">
+            {/* Subtle non-blocking ambient glow */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.06)_0%,transparent_60%)]" />
 
-            {/* noise + soft gradient overlays */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.08),transparent_42%),radial-gradient(circle_at_bottom,rgba(168,85,247,0.05),transparent_36%)] mix-blend-overlay pointer-events-none" />
-            <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-10 pointer-events-none" />
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -left-20 -top-10 h-48 w-48 rounded-full bg-blue-400/8 blur-3xl opacity-8" />
-              <div className="absolute right-8 bottom-6 h-36 w-36 rounded-full bg-pink-400/8 blur-3xl opacity-8" />
-            </div>
-
-            <div className="relative z-10 grid gap-10 xl:gap-12">
-              <div className="max-w-3xl">
-                <p className="mb-4 text-xs uppercase tracking-[0.35em] text-white/55">Technology ecosystem</p>
-                <h2 className="text-4xl font-semibold leading-tight text-white md:text-5xl">A unified platform for premium digital experiences.</h2>
-                <p className="mt-6 text-base leading-8 text-white/65">
-                  Six strategic domains, one refined ecosystem designed to feel editorial, polished and deeply crafted for modern agency production.
-                </p>
-              </div>
-
+            <div className="relative z-10 grid gap-8">
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {ecosystemColumns.map((column, index) => {
+                {ecosystemColumns.map((column) => {
                   const ColumnIcon = column.icon as any;
 
                   return (
-                    <motion.div
+                    <div
                       key={column.title}
-                      initial={{ opacity: 0.15, y: 16 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.1, margin: '0px 0px -50px 0px' }}
-                      transition={{ duration: 0.6, delay: Math.min(0.12 + index * 0.06, 0.15) }}
-                      whileHover={{ y: -6, scale: 1.02, boxShadow: '0 30px 90px rgba(2,6,23,0.6)' }}
-                      className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-8 text-white transition-all duration-300"
-                      style={{ minHeight: 220 }}
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-white transition-all duration-300 hover:border-white/20 hover:bg-white/[0.04]"
                     >
-                      <div className="absolute inset-x-6 top-0 h-[3px] rounded-b-md opacity-95" style={{ background: `linear-gradient(90deg, ${column.accentFrom}, ${column.accentTo})`, filter: 'blur(6px)' }} />
-                      <div className="absolute inset-x-6 top-[6px] h-1 rounded-b-md opacity-30" style={{ background: `linear-gradient(90deg, ${column.accentFrom}, ${column.accentTo})`, filter: 'blur(10px)' }} />
-
-                      <div className="relative flex items-start gap-6">
-                        <motion.div
-                          whileHover={{ rotate: 5, scale: 1.08 }}
-                          animate={{ y: [0, -3, 0] }}
-                          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                          className="relative flex h-[54px] w-[54px] items-center justify-center rounded-full"
+                      <div className="flex items-start gap-4 mb-4">
+                        <div
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white shadow-sm"
+                          style={{ borderColor: `${column.accentFrom}33` }}
                         >
-                          <div className="absolute inset-0 rounded-full" style={{ background: `radial-gradient(circle, ${column.accentFrom}22 0%, ${column.accentTo}12 25%, transparent 55%)`, filter: 'blur(16px)' }} />
-                          <div className="relative flex h-[46px] w-[46px] items-center justify-center rounded-full border border-white/10 bg-white/6 backdrop-blur-sm" style={{ boxShadow: `0 12px 40px ${column.accentFrom}14` }}>
-                            <ColumnIcon size={48} className="relative text-white" />
-                          </div>
-                        </motion.div>
-
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white tracking-tight">{column.title}</h3>
-                          <p className="mt-3 text-sm leading-7 text-white/65">{column.description}</p>
-
-                          <div className="mt-7 flex flex-wrap gap-3">
-                            {column.items.map((item) => {
-                              const TechIcon = techIconMap[item];
-                              return (
-                                <motion.button
-                                  key={item}
-                                  whileHover={{ y: -4 }}
-                                  transition={{ duration: 0.25 }}
-                                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 backdrop-blur-sm shadow-[0_8px_30px_rgba(2,6,23,0.35)]"
-                                  style={{
-                                    boxShadow: '0 6px 22px rgba(0,0,0,0.24)',
-                                    borderColor: 'rgba(255,255,255,0.08)'
-                                  }}
-                                >
-                                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: column.accentFrom }} />
-                                  {TechIcon ? <TechIcon size={14} className="text-white/70" /> : null}
-                                  <span className="whitespace-nowrap">{item}</span>
-                                </motion.button>
-                              );
-                            })}
-                          </div>
+                          <ColumnIcon size={22} style={{ color: column.accentFrom }} />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-white tracking-tight">{column.title}</h3>
+                          <p className="mt-1 text-xs leading-relaxed text-white/60">{column.description}</p>
                         </div>
                       </div>
-                    </motion.div>
+
+                      <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-white/5">
+                        {column.items.map((item) => {
+                          const TechIcon = techIconMap[item];
+                          return (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() => handleTechFilter(item)}
+                              title={`Filter projects built with ${item}`}
+                              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition-all duration-200 hover:border-white/30 hover:bg-white/15 hover:text-white active:scale-95 cursor-pointer"
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full" style={{ background: column.accentFrom }} />
+                              {TechIcon ? <TechIcon size={13} className="text-white/70" /> : null}
+                              <span className="whitespace-nowrap">{item}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 pt-4 border-t border-white/10">
                 {stackStats.map((stat) => (
-                  <motion.div
+                  <div
                     key={stat.label}
-                    whileHover={{ y: -6, scale: 1.01 }}
-                    transition={{ duration: 0.25 }}
-                    className="rounded-[28px] border border-white/10 bg-white/4 p-6 text-center text-white backdrop-blur-sm"
-                    style={{ boxShadow: '0 20px 60px rgba(2,6,23,0.55)' }}
+                    className="rounded-xl border border-white/10 bg-white/[0.02] p-5 text-center text-white transition hover:border-white/20"
                   >
-                    <div className="text-4xl font-semibold">
-                      {typeof stat.value === 'number' ? <CountUp value={stat.value} /> : stat.value}
+                    <div className="text-3xl font-bold font-mono text-white">
+                      {stat.value}
                     </div>
-                    <div className="mt-2 text-[11px] uppercase tracking-[0.35em] text-white/50">{stat.label}</div>
-                    <div className="mt-3 text-sm text-white/65">{stat.text}</div>
-                  </motion.div>
+                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.25em] text-white/50">{stat.label}</div>
+                    <div className="mt-2 text-xs text-white/60 leading-normal">{stat.text}</div>
+                  </div>
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      <section data-scene-section="why" className="relative z-20 px-6 py-24 md:px-12 lg:px-16 opacity-100">
+      <section id="why" data-scene-section="why" className="relative z-20 px-6 py-24 md:px-12 lg:px-16 opacity-100">
         <div className="mx-auto max-w-7xl space-y-6">
           <div className="max-w-4xl">
             <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/55">Why NovaCraft</p>
@@ -1048,9 +1048,17 @@ export default function App() {
           </div>
           <div className="space-y-4">
             {benefits.map((benefit, index) => (
-              <div key={benefit} className="liquid-glass flex flex-col justify-between rounded-[1.5rem] border border-white/10 px-6 py-8 md:flex-row md:items-center">
-                <div className="text-3xl font-semibold text-white md:text-4xl">0{index + 1}</div>
-                <div className="mt-4 text-2xl font-normal text-white md:mt-0 md:text-3xl">{benefit}</div>
+              <div
+                key={benefit}
+                className="liquid-glass group flex flex-col justify-between rounded-[1.5rem] border border-white/10 px-6 py-8 md:flex-row md:items-center transition-all duration-300 hover:border-white/25 hover:bg-white/[0.04]"
+              >
+                <div className="text-3xl font-semibold text-white/40 group-hover:text-white transition-colors md:text-4xl">
+                  0{index + 1}
+                </div>
+                <div className="mt-4 text-2xl font-normal text-white md:mt-0 md:text-3xl flex items-center justify-between gap-4">
+                  <span>{benefit}</span>
+                  <ArrowRight className="h-6 w-6 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 hidden md:block text-white/70" />
+                </div>
               </div>
             ))}
           </div>
@@ -1083,24 +1091,24 @@ export default function App() {
             </div>
           </div>
 
-          <form ref={contactFormRef} onSubmit={handleContactSubmit} className="liquid-glass rounded-[1.5rem] border border-white/10 p-6">
+          <form ref={contactFormRef} onSubmit={handleContactSubmit} className="liquid-glass rounded-[1.5rem] border border-white/10 p-6 md:p-8">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm text-white/70">
-                <span className="mb-2 block">Name</span>
+                <span className="mb-2 block">Name <span className="text-white/40">*</span></span>
                 <input
                   name="user_name"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-white/30"
                   placeholder="Your name"
                 />
               </label>
               <label className="text-sm text-white/70">
-                <span className="mb-2 block">Email</span>
+                <span className="mb-2 block">Email <span className="text-white/40">*</span></span>
                 <input
                   name="user_email"
                   type="email"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-white/30"
                   placeholder="you@company.com"
                 />
               </label>
@@ -1108,35 +1116,30 @@ export default function App() {
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <label className="text-sm text-white/70">
-                <span className="mb-2 block">Budget</span>
-                <select
-                  name="user_budget"
-                  required
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
-                >
-                  <option value="">Select a budget</option>
-                  <option value="<$500">&lt;$500</option>
-                  <option value="$500–$2k">$500–$2k</option>
-                  <option value="$2k–$5k">$2k–$5k</option>
-                  <option value="$5k+">$5k+</option>
-                </select>
-              </label>
-              <label className="text-sm text-white/70">
-                <span className="mb-2 block">WhatsApp</span>
+                <span className="mb-2 block">Phone / WhatsApp</span>
                 <input
                   name="user_whatsapp"
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
-                  placeholder="Optional WhatsApp number"
+                  type="tel"
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-white/30"
+                  placeholder="+1 (555) 000-0000"
+                />
+              </label>
+              <label className="text-sm text-white/70">
+                <span className="mb-2 block">Company / Organization</span>
+                <input
+                  name="user_company"
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-white/30"
+                  placeholder="Company name (optional)"
                 />
               </label>
             </div>
             <label className="mt-4 block text-sm text-white/70">
-              <span className="mb-2 block">Message</span>
+              <span className="mb-2 block">Message <span className="text-white/40">*</span></span>
               <textarea
                 name="message"
                 required
-                className="min-h-32 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
-                placeholder="Tell us about the challenge."
+                className="min-h-32 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-white/30"
+                placeholder="Tell us about the challenge or project requirements."
               />
             </label>
             <button
@@ -1150,36 +1153,325 @@ export default function App() {
         </div>
       </section>
 
-      <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20NovaCraft%20Studio,%0A%0AI%20found%20your%20website%20and%20would%20like%20to%20discuss%20my%20project.%0A%0A•%20Name:%0A•%20Company:%0A•%20Service%20Required:%0A•%20Budget:%0A•%20Brief%20Requirement:%0A%0ALooking%20forward%20to%20hearing%20from%20you.`}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => ReactGA.event({ category: 'Contact', action: 'WhatsApp Clicked' })}
-        className="fixed bottom-6 left-6 z-50 inline-flex items-center gap-3 rounded-full bg-green-500 px-4 py-3 text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:bg-green-400 hover:scale-110"
-        title="Chat on WhatsApp"
-      >
-        <span className="absolute inset-0 rounded-full bg-green-400 opacity-20 animate-ping" />
-        <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white">
-          <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.116 1.526 5.845L.057 23.571a.5.5 0 00.625.601l5.865-1.539A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.812 9.812 0 01-5.012-1.376l-.36-.213-3.733.979.998-3.645-.234-.374A9.818 9.818 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z" />
-          </svg>
-        </span>
-        <span className="relative text-sm font-semibold">WhatsApp</span>
-      </a>
+      {/* Floating Action Buttons: Back to Top & WhatsApp */}
+      <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-2.5">
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className={`flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-[#141414]/90 backdrop-blur-md text-white/90 shadow-xl shadow-black/50 transition-all duration-300 hover:bg-white/20 hover:text-white hover:scale-110 active:scale-95 group ${
+            scroll > 200 ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'
+          }`}
+          title="Back to top"
+          aria-label="Back to top"
+        >
+          <ChevronUp size={20} className="transition-transform duration-200 group-hover:-translate-y-0.5" />
+        </button>
 
-      <footer className="relative z-10 border-t border-white/10 px-6 py-8 text-sm text-white/60 md:px-12 lg:px-16">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="font-semibold text-white">NovaCraft</div>
-            <div>AI • Software • Analytics</div>
+        <a
+          href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hello%20NovaCraft%20Studio,%0A%0AI%20found%20your%20website%20and%20would%20like%20to%20discuss%20my%20project.%0A%0A•%20Name:%0A•%20Company:%0A•%20Service%20Required:%0A•%20Brief%20Requirement:%0A%0ALooking%20forward%20to%20hearing%20from%20you.`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => ReactGA.event({ category: 'Contact', action: 'WhatsApp Clicked' })}
+          className="inline-flex items-center gap-3 rounded-full bg-green-500 px-4 py-3 text-white shadow-lg shadow-green-500/30 transition-all duration-300 hover:bg-green-400 hover:scale-110"
+          title="Chat on WhatsApp"
+        >
+          <span className="absolute inset-0 rounded-full bg-green-400 opacity-20 animate-ping" />
+          <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white">
+            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.116 1.526 5.845L.057 23.571a.5.5 0 00.625.601l5.865-1.539A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.812 9.812 0 01-5.012-1.376l-.36-.213-3.733.979.998-3.645-.234-.374A9.818 9.818 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z" />
+            </svg>
+          </span>
+          <span className="relative text-sm font-semibold">WhatsApp</span>
+        </a>
+      </div>
+
+      {/* Comprehensive Professional Deployable Agency Footer */}
+      <footer className="relative z-10 border-t border-white/10 bg-[#070b14]/95 px-6 pt-16 pb-12 text-sm text-white/60 md:px-12 lg:px-16 backdrop-blur-2xl">
+        <div className="mx-auto max-w-7xl">
+          {/* Main Footer Directory */}
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12 pb-14 border-b border-white/10">
+            {/* Column 1: Brand & Overview (4 cols) */}
+            <div className="lg:col-span-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 border border-white/15 text-white font-bold text-base shadow-sm">
+                  NC
+                </div>
+                <div>
+                  <div className="text-xl font-bold tracking-tight text-white leading-none">NovaCraft Studio</div>
+                  <div className="text-xs text-white/40 mt-1">Enterprise Software • AI Systems • Cloud Architecture</div>
+                </div>
+              </div>
+              <p className="text-xs leading-relaxed text-white/65 max-w-sm">
+                Engineering high-performance digital products, bespoke enterprise platforms, and production AI systems for forward-thinking enterprises globally.
+              </p>
+              
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-1.5 text-xs text-emerald-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <span>Available for new projects (Q4 / Q1)</span>
+              </div>
+
+              <div className="pt-2 text-xs text-white/50 space-y-1">
+                <p><span className="text-white/70 font-medium">Headquarters:</span> India (IST / UTC +5:30)</p>
+                <p><span className="text-white/70 font-medium">Coverage:</span> United States, Europe, Middle East &amp; APAC</p>
+                <p><span className="text-white/70 font-medium">Response SLA:</span> Within 24 business hours</p>
+              </div>
+            </div>
+
+            {/* Column 2: Sitemap & Navigation (2 cols) */}
+            <div className="lg:col-span-2 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/40">Sitemap</p>
+              <ul className="space-y-2 text-xs">
+                <li><a href="#" className="transition-colors hover:text-white">Home</a></li>
+                <li><a href="#services" className="transition-colors hover:text-white">Services</a></li>
+                <li><a href="#projects" className="transition-colors hover:text-white">Case Studies</a></li>
+                <li><a href="#process" className="transition-colors hover:text-white">6-Stage Process</a></li>
+                <li><a href="#why" className="transition-colors hover:text-white">Why NovaCraft</a></li>
+                <li><a href="#tech-stack" className="transition-colors hover:text-white">Tech Stack</a></li>
+                <li><a href="#about" className="transition-colors hover:text-white">Agency Performance</a></li>
+                <li><a href="#contact" className="transition-colors hover:text-white">Start a Project</a></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Solutions & Industries (3 cols) */}
+            <div className="lg:col-span-3 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/40">Solutions &amp; Industries</p>
+              <ul className="space-y-2 text-xs">
+                <li><a href="#services" className="transition-colors hover:text-white">Custom Web Applications</a></li>
+                <li><a href="#services" className="transition-colors hover:text-white">Healthcare &amp; Clinical Portals</a></li>
+                <li><a href="#services" className="transition-colors hover:text-white">Bespoke Tailoring &amp; Garment ERP</a></li>
+                <li><a href="#services" className="transition-colors hover:text-white">Real-Time Sports &amp; Auction Platforms</a></li>
+                <li><a href="#services" className="transition-colors hover:text-white">AI Voice &amp; Mock Interview Engines</a></li>
+                <li><a href="#services" className="transition-colors hover:text-white">B2B Industrial Minerals &amp; Export</a></li>
+                <li><a href="#services" className="transition-colors hover:text-white">Supply Chain &amp; Retail Operations</a></li>
+              </ul>
+            </div>
+
+            {/* Column 4: Featured Live Work (3 cols) */}
+            <div className="lg:col-span-3 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/40">Featured Client Work</p>
+              <ul className="space-y-2.5 text-xs">
+                <li>
+                  <a href="https://drpoojabala.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
+                    <span>Dr. Pooja Bala Dental Clinic</span>
+                    <span className="text-[10px] text-emerald-400 border border-emerald-500/30 px-1 py-0.2 rounded">Live ↗</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://hingutailors.vercel.app/login" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
+                    <span>Hingu Tailors Cloud ERP</span>
+                    <span className="text-[10px] text-blue-400 border border-blue-500/30 px-1 py-0.2 rounded">ERP ↗</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://cricketbid-tau.vercel.app/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
+                    <span>Cricket Auction Platform</span>
+                    <span className="text-[10px] text-amber-400 border border-amber-500/30 px-1 py-0.2 rounded">Live ↗</span>
+                  </a>
+                </li>
+                <li><a href="#projects" className="transition-colors hover:text-white">Aurevo Minerals (B2B Catalog)</a></li>
+                <li><a href="#projects" className="transition-colors hover:text-white">InterviewIQ (Voice AI Simulation)</a></li>
+                <li><a href="#projects" className="transition-colors hover:text-white">Grocery Operations Management</a></li>
+              </ul>
+
+              <div className="pt-3 border-t border-white/10">
+                <a
+                  href={CALENDLY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => ReactGA.event({ category: 'Contact', action: 'Book Call Clicked (Footer)' })}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white transition hover:bg-white/10"
+                >
+                  <CalendarDays size={13} />
+                  <span>Book Free Technical Call</span>
+                </a>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <a className="transition-colors hover:text-white" href="#services">Services</a>
-            <a className="transition-colors hover:text-white" href="#projects">Projects</a>
-            <a className="transition-colors hover:text-white" href="#contact">Contact</a>
+
+          {/* Legal, Compliance & Deployable Policy Links */}
+          <div className="py-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-white/50">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <span className="text-white/30 uppercase tracking-wider font-semibold text-[10px]">Legal &amp; Trust:</span>
+              <button
+                type="button"
+                onClick={() => setActiveLegalModal('privacy')}
+                className="hover:text-white transition-colors underline-offset-4 hover:underline"
+              >
+                Privacy Policy
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveLegalModal('terms')}
+                className="hover:text-white transition-colors underline-offset-4 hover:underline"
+              >
+                Terms of Service
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveLegalModal('cookies')}
+                className="hover:text-white transition-colors underline-offset-4 hover:underline"
+              >
+                Cookie Policy
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveLegalModal('security')}
+                className="hover:text-white transition-colors underline-offset-4 hover:underline"
+              >
+                Security Standards
+              </button>
+              <a
+                href="/sitemap.xml"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors underline-offset-4 hover:underline"
+              >
+                XML Sitemap ↗
+              </a>
+            </div>
+          </div>
+
+          {/* Sub-Footer */}
+          <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row text-xs text-white/40">
+            <div>
+              © {new Date().getFullYear()} NovaCraft Studio. All rights reserved. Registered software &amp; AI engineering agency.
+            </div>
+            <div className="flex items-center gap-4 text-white/60">
+              <a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+                title="GitHub"
+              >
+                GitHub
+              </a>
+              <span>•</span>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+                title="LinkedIn"
+              >
+                LinkedIn
+              </a>
+              <span>•</span>
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors"
+                title="WhatsApp Direct"
+              >
+                WhatsApp
+              </a>
+            </div>
           </div>
         </div>
       </footer>
+
+      {/* Accessible Production-Ready Legal & Policy Modals */}
+      <AnimatePresence>
+        {activeLegalModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl border border-white/15 bg-[#0b101d] p-6 md:p-8 text-white shadow-2xl space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <FileText size={16} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white capitalize">
+                      {activeLegalModal === 'privacy' && 'Privacy Policy'}
+                      {activeLegalModal === 'terms' && 'Terms of Service'}
+                      {activeLegalModal === 'cookies' && 'Cookie Policy'}
+                      {activeLegalModal === 'security' && 'Security Standards'}
+                    </h3>
+                    <p className="text-[11px] text-white/40">NovaCraft Studio • Last updated November 2026</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveLegalModal(null)}
+                  className="rounded-full p-2 text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+                  aria-label="Close dialog"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="text-xs text-white/70 space-y-4 leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
+                {activeLegalModal === 'privacy' && (
+                  <>
+                    <p>At NovaCraft Studio, we respect your privacy and are committed to protecting the confidential information of our clients, prospective partners, and site visitors.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">1. Information We Collect</h4>
+                    <p>We collect information you explicitly provide when submitting contact inquiries, scheduling consultations, or entering into software development agreements. This includes name, email, phone number, company name, and project scope details.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">2. How We Use Information</h4>
+                    <p>Information is used solely to respond to project inquiries, provide architectural assessments, prepare development proposals, and fulfill contractual software deliverables. We do not sell or lease your data to third parties.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">3. Data Security &amp; Confidentiality</h4>
+                    <p>All communication and project materials are protected under strict confidentiality protocols. Data submitted via web forms is transmitted using TLS encryption.</p>
+                  </>
+                )}
+
+                {activeLegalModal === 'terms' && (
+                  <>
+                    <p>These Terms of Service govern your access to NovaCraft Studio services and development deliverables.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">1. Scope of Services</h4>
+                    <p>NovaCraft Studio provides software engineering, product design, AI system development, cloud infrastructure setup, and consulting services under mutual statements of work (SOW) or milestone agreements.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">2. Intellectual Property Ownership</h4>
+                    <p>Unless explicitly agreed otherwise, upon complete milestone payment, 100% of custom source code, documentation, assets, and intellectual property created for the client are assigned directly and exclusively to the client with zero vendor lock-in.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">3. Warranties &amp; Support</h4>
+                    <p>We guarantee all delivered software against technical defects for a 30-day post-launch warranty window, with extended SLA maintenance agreements available upon request.</p>
+                  </>
+                )}
+
+                {activeLegalModal === 'cookies' && (
+                  <>
+                    <p>This Cookie Policy explains how NovaCraft Studio uses cookies and browser storage technologies.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">1. Essential Cookies</h4>
+                    <p>We utilize strictly necessary technical tokens to maintain session integrity, user preferences (such as theme and navigation states), and ensure reliable form submissions.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">2. Performance &amp; Analytics</h4>
+                    <p>We use privacy-friendly analytics (such as Google Analytics 4 and Microsoft Clarity) with IP anonymization to evaluate aggregate website traffic, optimize page speed, and enhance navigation usability.</p>
+                  </>
+                )}
+
+                {activeLegalModal === 'security' && (
+                  <>
+                    <p>NovaCraft Studio maintains rigorous security and non-disclosure standards for enterprise clients.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">1. Non-Disclosure Agreements (NDA)</h4>
+                    <p>We sign mutual NDAs before reviewing proprietary repositories, internal datasets, or business logic. All internal team members are bound by confidentiality clauses.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">2. Code &amp; Secret Management</h4>
+                    <p>We never commit client secrets, API keys, or production database credentials to public repositories. Environment variables are managed securely via Doppler, AWS Secrets Manager, or encrypted vaults.</p>
+                    <h4 className="text-sm font-semibold text-white pt-2">3. Repository Security</h4>
+                    <p>Code is developed within private client repositories or transferred immediately upon milestone completion. Automated security linters and dependency vulnerability scans are run continuously in our CI/CD workflows.</p>
+                  </>
+                )}
+              </div>
+
+              <div className="pt-3 border-t border-white/10 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActiveLegalModal(null)}
+                  className="px-5 py-2 rounded-xl bg-white/10 text-xs font-semibold text-white hover:bg-white/20 transition-colors"
+                >
+                  Understood &amp; Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <Toaster
         position="bottom-right"
         toastOptions={{

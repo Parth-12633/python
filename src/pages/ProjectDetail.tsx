@@ -44,7 +44,7 @@ function GalleryImage({ src, alt, initials, onOpen }: GalleryImageProps) {
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const project = projectsData.find((projectItem) => projectItem.slug === id);
+  const project = projectsData.find((projectItem) => projectItem.slug === id || (id === 'analytics-dashboard' && projectItem.slug === 'hingu-tailors-erp'));
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,13 +118,25 @@ export default function ProjectDetail() {
             ) : null}
           </AnimatePresence>
 
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-          >
-            ← Back to Projects
-          </button>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              ← Back to Projects
+            </button>
+            {project.liveUrl && (
+              <a
+                href={project.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-6 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 hover:text-white"
+              >
+                Visit Live Application ↗
+              </a>
+            )}
+          </div>
 
           <div className="mt-8 space-y-6">
             <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[0.68rem] uppercase tracking-[0.35em] text-white/70">
@@ -227,9 +239,9 @@ export default function ProjectDetail() {
                   href={project.liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  className="inline-flex items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-6 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 hover:text-white"
                 >
-                  View Live Site
+                  View Live Site ↗
                 </a>
               ) : null}
             </div>

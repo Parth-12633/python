@@ -60,17 +60,31 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
           ))}
         </div>
       </div>
-      <div className="relative z-10 border-t border-white/10 p-6">
+      <div className="relative z-10 border-t border-white/10 p-6 flex flex-col sm:flex-row gap-3">
         <button
           type="button"
           onClick={() => {
             ReactGA.event({ category: 'Portfolio', action: 'Project Viewed', label: project.title });
             navigate(`/project/${project.slug}`);
           }}
-          className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition duration-300 hover:bg-white/10"
+          className={`inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition duration-300 hover:bg-white/10 ${project.liveUrl ? 'flex-1' : 'w-full'}`}
         >
-          View Project →
+          {project.liveUrl ? 'Details →' : 'View Project →'}
         </button>
+        {project.liveUrl && (
+          <a
+            href={project.liveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.stopPropagation();
+              ReactGA.event({ category: 'Portfolio', action: 'Live Site Clicked', label: project.title });
+            }}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300 transition duration-300 hover:bg-emerald-500/20 hover:text-white"
+          >
+            Live Site ↗
+          </a>
+        )}
       </div>
     </motion.article>
   );
