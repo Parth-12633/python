@@ -160,8 +160,8 @@ export const projectsData: Project[] = [
     badge: 'CLIENT PROJECT',
     status: 'CLIENT PROJECT',
     initials: 'AM',
-    title: 'Aurevo Minerals',
-    description: 'A global B2B commercial platform specializing in high-grade activated carbon and mineral-rich roasted bamboo salt.',
+    title: 'Aurevo Minerals LLP — Activated Carbon Manufacturer',
+    description: 'A global B2B commercial platform for a premier coconut shell activated carbon and mineral manufacturer, engineered with RFQ pipelines, lab certifications, and global export workflows.',
     tags: ['React', 'Next.js', 'Tailwind CSS', 'B2B'],
     category: 'Industrial Minerals / Export',
     technologies: ['React', 'Next.js', 'Tailwind CSS', 'TypeScript', 'Vercel'],
@@ -177,7 +177,7 @@ export const projectsData: Project[] = [
       'Mobile-responsive global buyer portal optimized for trade'
     ],
     previewImage: '/projects/aurevo.png',
-    liveUrl: '',
+    liveUrl: 'https://auerevo-minerals.vercel.app/',
     images: [
       '/projects/aurevo1.png',
       '/projects/aurevo2.png',

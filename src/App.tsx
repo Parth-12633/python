@@ -1216,7 +1216,6 @@ export default function App() {
 
               <div className="pt-2 text-xs text-white/50 space-y-1">
                 <p><span className="text-white/70 font-medium">Headquarters:</span> India (IST / UTC +5:30)</p>
-                <p><span className="text-white/70 font-medium">Coverage:</span> United States, Europe, Middle East &amp; APAC</p>
                 <p><span className="text-white/70 font-medium">Response SLA:</span> Within 24 business hours</p>
               </div>
             </div>
@@ -1290,7 +1289,12 @@ export default function App() {
                     <span className="text-[10px] text-amber-400 border border-amber-500/30 px-1 py-0.2 rounded">Live ↗</span>
                   </a>
                 </li>
-                <li><a href="#projects" className="transition-colors hover:text-white">Aurevo Minerals (B2B Catalog)</a></li>
+                <li>
+                  <a href="https://auerevo-minerals.vercel.app/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
+                    <span>Aurevo Minerals LLP</span>
+                    <span className="text-[10px] text-emerald-400 border border-emerald-500/30 px-1 py-0.2 rounded">Live ↗</span>
+                  </a>
+                </li>
                 <li><a href="#projects" className="transition-colors hover:text-white">InterviewIQ (Voice AI Engine)</a></li>
               </ul>
 
