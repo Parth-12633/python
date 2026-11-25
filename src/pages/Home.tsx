@@ -26,7 +26,12 @@ export default function Home() {
       projectFilter
         ? projectsData.filter((p) => {
             const q = projectFilter.toLowerCase();
-            return p.tags.some((tag) => tag.toLowerCase().includes(q)) || p.category.toLowerCase().includes(q);
+            const terms = q.includes('|') ? q.split('|').map((t) => t.trim()) : [q];
+            return terms.some(
+              (term) =>
+                p.tags.some((tag) => tag.toLowerCase().includes(term)) ||
+                p.category.toLowerCase().includes(term)
+            );
           })
         : projectsData,
     [projectFilter]

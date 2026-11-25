@@ -251,15 +251,15 @@ export const stackStats = [
   { text2: 'AI', label: 'Powered Development', text: 'Building intelligent digital experiences.' }
 ] as { countTo?: number; suffix?: string; text2?: string; label: string; text: string }[];
 
-/** Quick-filter chips for the work grid. `match` is a substring tested against project tags. */
+/** Quick-filter chips for the work grid. `match` is a substring or pipe-separated keyword list tested against project tags and category. */
 export const projectFilters = [
   { label: 'All work', match: null },
-  { label: 'Healthcare', match: 'Healthcare' },
-  { label: 'React', match: 'React' },
-  { label: 'Node.js', match: 'Node.js' },
-  { label: 'AI / OpenAI', match: 'OpenAI' },
-  { label: 'Enterprise ERP', match: 'ERP' },
-  { label: 'Invitations', match: 'Invitation' }
+  { label: 'Healthcare', match: 'healthcare' },
+  { label: 'Business & ERP', match: 'business|erp' },
+  { label: 'Invitations', match: 'invitation|wedding' },
+  { label: 'Architecture', match: 'architecture' },
+  { label: 'AI Solutions', match: 'ai' },
+  { label: 'Platforms', match: 'platform|auction' }
 ] as { label: string; match: string | null }[];
 
 export const featuredLinks = [
