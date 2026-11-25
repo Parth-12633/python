@@ -321,7 +321,7 @@ export const projectsData: Project[] = [
       'RSVP opens WhatsApp with name, events and guest count prefilled'
     ],
     previewImage: '/projects/akash-drashti.jpg',
-    liveUrl: '/wedding',
+    liveUrl: 'https://wedding-invite-drab-tau.vercel.app/',
     images: ['/projects/akash-drashti-m.jpg', '/projects/akash-drashti.jpg']
   }
 ];
