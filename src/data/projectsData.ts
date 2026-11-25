@@ -301,8 +301,8 @@ export const projectsData: Project[] = [
   {
     id: 'heritage-wedding-invitation',
     slug: 'heritage-wedding-invitation',
-    badge: 'DESIGN SHOWCASE',
-    status: 'DESIGN SHOWCASE',
+    badge: 'CLIENT PROJECT',
+    status: 'CLIENT PROJECT',
     initials: 'AD',
     title: 'Heritage Wedding Invitation — Akash & Drashti',
     description: 'A scroll-directed wedding invitation: a tap-to-enter photo cover opens onto a sunrise over a painted temple with flying birds, swinging bells and a waving flag, then six event cards, a photo strip, venue map, WhatsApp RSVP and a live countdown.',
@@ -321,7 +321,7 @@ export const projectsData: Project[] = [
       'RSVP opens WhatsApp with name, events and guest count prefilled'
     ],
     previewImage: '/projects/akash-drashti.jpg',
-    liveUrl: '/demos/heritage-wedding/index.html',
+    liveUrl: '/wedding',
     images: ['/projects/akash-drashti-m.jpg', '/projects/akash-drashti.jpg']
   }
 ];

@@ -1,7 +1,24 @@
 {
+  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/wedding",
+      "destination": "/demos/heritage-wedding/index.html"
+    },
+    {
+      "source": "/akash-drashti",
+      "destination": "/demos/heritage-wedding/index.html"
+    },
+    {
+      "source": "/demos/heritage-wedding",
+      "destination": "/demos/heritage-wedding/index.html"
+    },
+    {
+      "source": "/demos/heritage-wedding/",
+      "destination": "/demos/heritage-wedding/index.html"
+    },
+    {
+      "source": "/((?!demos|assets|projects|favicon|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/index.html"
     }
   ]
