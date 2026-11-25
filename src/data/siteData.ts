@@ -271,5 +271,5 @@ export const featuredLinks = [
   { name: 'Cricket Auction Platform', href: 'https://cricketbid-tau.vercel.app/', tag: 'Live', color: 'text-neon border-neon/40' },
   { name: 'Aurevo Minerals LLP', href: 'https://auerevo-minerals.vercel.app/', tag: 'Live', color: 'text-neon border-neon/30' },
   { name: 'Golden Jubilee Invitation', href: 'https://anniversary-invitation-card.vercel.app/', tag: 'Live', color: 'text-neon border-neon/40' },
-  { name: 'Heritage Wedding Invitation (Akash & Drashti)', href: '/wedding', tag: 'Live', color: 'text-neon border-neon/40' }
+  { name: 'Heritage Wedding Invitation (Kabir & Ananya)', href: '/wedding', tag: 'Live', color: 'text-neon border-neon/40' }
 ];
