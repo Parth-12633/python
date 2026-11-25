@@ -299,32 +299,6 @@ export const projectsData: Project[] = [
     images: ['/projects/anniversary-m.png', '/projects/anniversary.png']
   },
   {
-    id: 'royal-wedding-invitation',
-    slug: 'royal-wedding-invitation',
-    badge: 'DESIGN SHOWCASE',
-    status: 'DESIGN SHOWCASE',
-    initials: 'AM',
-    title: 'Royal Wedding Invitation — Aarav & Meera',
-    description: 'A luxury three-day wedding invitation: Mughal-arch gates that open, falling petals, scroll-drawn timeline, event itineraries, RSVP and add-to-calendar.',
-    tags: ['Invitations', 'Wedding', 'Events', 'Luxury', 'JavaScript', 'Canvas'],
-    category: 'Wedding & Event Invitations',
-    technologies: ['HTML5', 'Modern CSS', 'JavaScript', 'Canvas API', 'SVG'],
-    duration: '1–2 Weeks',
-    platform: 'Responsive Web Invitation',
-    overview: 'A flagship showcase of what a NovaCraft Studio wedding invitation can be. Guests open ornate Mughal-arch doors with a gold seal, then scroll through the couple’s story, family blessings, a five-event itinerary (Mehndi to Reception) with dress codes, venue details, and a built-in RSVP — wrapped in an emerald, antique-gold and ivory palette with generated mandala artwork.',
-    challenge: 'Premium weddings need an invitation that feels as grand as the celebration itself — culturally authentic, emotionally rich, and practical enough to replace printed cards, RSVP calls and multiple reminder messages.',
-    solution: 'Built a bespoke, dependency-free experience: SVG-generated arches and mandalas, a canvas petal system, scroll-driven timeline drawing, countdown, floating-label RSVP form with guest and event selection, and one-tap .ics calendar export for all five events.',
-    results: [
-      'Gate-opening reveal with petal burst sets the tone',
-      'All events, dress codes and venue details in one link',
-      'RSVP with guest count and event selection',
-      'Add-to-calendar file covering every ceremony'
-    ],
-    previewImage: '/projects/wedding-hero.png',
-    liveUrl: '/demos/wedding/index.html',
-    images: ['/projects/wedding.png', '/projects/wedding-m.png']
-  },
-  {
     id: 'heritage-wedding-invitation',
     slug: 'heritage-wedding-invitation',
     badge: 'DESIGN SHOWCASE',

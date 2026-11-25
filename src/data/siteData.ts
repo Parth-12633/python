@@ -271,6 +271,5 @@ export const featuredLinks = [
   { name: 'Cricket Auction Platform', href: 'https://cricketbid-tau.vercel.app/', tag: 'Live', color: 'text-neon border-neon/40' },
   { name: 'Aurevo Minerals LLP', href: 'https://auerevo-minerals.vercel.app/', tag: 'Live', color: 'text-neon border-neon/30' },
   { name: 'Golden Jubilee Invitation', href: 'https://anniversary-invitation-card.vercel.app/', tag: 'Live', color: 'text-neon border-neon/40' },
-  { name: 'Royal Wedding Invitation (Showcase)', href: '/demos/wedding/index.html', tag: 'Demo', color: 'text-neon border-neon/40' },
   { name: 'Heritage Wedding Invitation (Showcase)', href: '/demos/heritage-wedding/index.html', tag: 'Demo', color: 'text-neon border-neon/40' }
 ];
