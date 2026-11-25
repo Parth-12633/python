@@ -736,7 +736,7 @@
     tickCountdown();
     setInterval(tickCountdown, 1000);
   }
-  var TARGET = +new Date("2026-11-28T16:04:00.000Z");
+  var TARGET = +new Date("2026-11-29T11:30:00.000+05:30");
   var digitAnims = [];
   var digitSpring = springFn(450, 35, 1);
   function tickCountdown() {
