@@ -271,5 +271,83 @@ export const projectsData: Project[] = [
       '/projects/groc3.png',
       '/projects/groc5.png'
     ]
+  },
+  {
+    id: 'golden-jubilee-invitation',
+    slug: 'golden-jubilee-invitation',
+    badge: 'CLIENT PROJECT',
+    status: 'CLIENT PROJECT',
+    initials: 'GJ',
+    title: 'Golden Jubilee — 50th Anniversary Invitation',
+    description: 'A cinematic digital invitation for a 50th wedding anniversary: wax-seal reveal, scratch-to-reveal date, live countdown, venue map and calendar sync.',
+    tags: ['Invitations', 'JavaScript', 'Animation', 'Events'],
+    category: 'Wedding & Event Invitations',
+    technologies: ['HTML5', 'CSS Animation', 'JavaScript', 'Canvas', 'Vercel'],
+    duration: '1 Week',
+    platform: 'Mobile-first Web Invitation',
+    overview: 'A heartfelt digital invitation for the Golden Jubilee of Kaushika & Arvind. Guests open a wax-sealed envelope, scratch gold foil to reveal the date, scroll through a timeline of fifty years, watch a live countdown and get directions and a calendar reminder — all from one shareable link.',
+    challenge: 'Printed cards are costly, slow to deliver and impossible to update. The family wanted something emotional and elegant that every relative could open instantly on WhatsApp, on any phone.',
+    solution: 'Designed a story-driven invitation with a rose-and-gold visual language, tactile micro-interactions (wax-seal tap, scratch-to-reveal), a live countdown to the evening, an embedded venue map and an add-to-calendar action — optimised to load fast on mobile networks.',
+    results: [
+      'Opens instantly from a single WhatsApp link',
+      'Interactive reveals that guests love to share',
+      'Live countdown, map and calendar reminders built in',
+      'Zero printing or delivery cost, always up to date'
+    ],
+    previewImage: '/projects/anniversary.png',
+    liveUrl: 'https://anniversary-invitation-card.vercel.app/',
+    images: ['/projects/anniversary-m.png', '/projects/anniversary.png']
+  },
+  {
+    id: 'royal-wedding-invitation',
+    slug: 'royal-wedding-invitation',
+    badge: 'DESIGN SHOWCASE',
+    status: 'DESIGN SHOWCASE',
+    initials: 'AM',
+    title: 'Royal Wedding Invitation — Aarav & Meera',
+    description: 'A luxury three-day wedding invitation: Mughal-arch gates that open, falling petals, scroll-drawn timeline, event itineraries, RSVP and add-to-calendar.',
+    tags: ['Invitations', 'JavaScript', 'Canvas', 'Events', 'Wedding'],
+    category: 'Wedding & Event Invitations',
+    technologies: ['HTML5', 'Modern CSS', 'JavaScript', 'Canvas API', 'SVG'],
+    duration: '1–2 Weeks',
+    platform: 'Responsive Web Invitation',
+    overview: 'A flagship showcase of what a NovaCraft Studio wedding invitation can be. Guests open ornate Mughal-arch doors with a gold seal, then scroll through the couple’s story, family blessings, a five-event itinerary (Mehndi to Reception) with dress codes, venue details, and a built-in RSVP — wrapped in an emerald, antique-gold and ivory palette with generated mandala artwork.',
+    challenge: 'Premium weddings need an invitation that feels as grand as the celebration itself — culturally authentic, emotionally rich, and practical enough to replace printed cards, RSVP calls and multiple reminder messages.',
+    solution: 'Built a bespoke, dependency-free experience: SVG-generated arches and mandalas, a canvas petal system, scroll-driven timeline drawing, countdown, floating-label RSVP form with guest and event selection, and one-tap .ics calendar export for all five events.',
+    results: [
+      'Gate-opening reveal with petal burst sets the tone',
+      'All events, dress codes and venue details in one link',
+      'RSVP with guest count and event selection',
+      'Add-to-calendar file covering every ceremony'
+    ],
+    previewImage: '/projects/wedding-hero.png',
+    liveUrl: '/demos/wedding/index.html',
+    images: ['/projects/wedding.png', '/projects/wedding-m.png']
+  },
+  {
+    id: 'heritage-wedding-invitation',
+    slug: 'heritage-wedding-invitation',
+    badge: 'DESIGN SHOWCASE',
+    status: 'DESIGN SHOWCASE',
+    initials: 'AD',
+    title: 'Heritage Wedding Invitation — Akash & Drashti',
+    description: 'A scroll-directed wedding invitation: a tap-to-enter photo cover opens onto a sunrise over a painted temple with flying birds, swinging bells and a waving flag, then six event cards, a photo strip, venue map, WhatsApp RSVP and a live countdown.',
+    tags: ['Invitations', 'JavaScript', 'WebGL', 'Events', 'Wedding'],
+    category: 'Wedding & Event Invitations',
+    technologies: ['HTML5', 'Modern CSS', 'JavaScript', 'WebGL', 'three.js', 'Leaflet', 'Lenis'],
+    duration: '1–2 Weeks',
+    platform: 'Mobile-first Web Invitation',
+    overview: 'A cinematic, story-led invitation built for how guests actually open them — on a phone, from a WhatsApp link. A tap-to-enter cover with the couple’s photo starts the music and fades into a layered temple scene: the sun, mountains, clouds and temple rise into place, birds flock across the sky, bells swing and ring when touched, and a cloth flag waves above the spire. Scrolling carries guests through family blessings, six events on scalloped arch cards, the couple’s story, a photo strip, a venue map with switchable locations, a WhatsApp RSVP and a live countdown. One 430-unit design scales to every screen from small phones to wide desktops.',
+    challenge: 'Most digital invitations are static image scrolls. The brief was to match the emotion of a grand Indian wedding — ceremony, family, colour and music — while staying smooth on mid-range phones and easy for guests to act on.',
+    solution: 'Built as a single static page with one hand-written script and no framework: layered artwork moved by scroll-linked parallax, spring-timed reveals, a WebGL cloth shader for the flag, a three.js bird flock, spring-pendulum bells with sound, eased scrolling, a Leaflet map with location switcher, and an RSVP form that opens WhatsApp with the guest’s name, events and head-count prefilled.',
+    results: [
+      'Tap-to-enter cover that starts the music and the opening scene',
+      'Parallax temple scene with birds, ringing bells and a waving flag',
+      'Six-event itinerary, photo strip, venue map and live countdown',
+      'RSVP opens WhatsApp with name, events and guest count prefilled'
+    ],
+    previewImage: '/projects/akash-drashti.jpg',
+    liveUrl: '/demos/heritage-wedding/index.html',
+    images: ['/projects/akash-drashti-m.jpg', '/projects/akash-drashti.jpg']
   }
 ];

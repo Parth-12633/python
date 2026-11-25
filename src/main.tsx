@@ -6,6 +6,9 @@ import ReactGA from 'react-ga4';
 import App from './App';
 import './index.css';
 
+// Smooth-scroll (Lenis) manages scroll position itself — stop the browser restoring it mid-load.
+if (typeof window !== 'undefined' && 'scrollRestoration' in history) history.scrollRestoration = 'manual';
+
 // Inject Clarity (Microsoft) script at runtime if configured
 const CLARITY_ID = import.meta.env.VITE_CLARITY_ID ?? '';
 if (typeof window !== 'undefined' && CLARITY_ID && CLARITY_ID !== 'YOUR_CLARITY_ID') {
