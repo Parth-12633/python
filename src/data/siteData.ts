@@ -268,7 +268,6 @@ export const featuredLinks = [
   { name: 'Valence Atelier (Architecture)', href: 'https://valence-atelier.vercel.app/', tag: 'Live', color: 'text-neon border-neon/40' },
   { name: 'Dr. Pooja Bala Dental Clinic', href: 'https://drpoojabala.com', tag: 'Live', color: 'text-neon border-neon/30' },
   { name: 'Hingu Tailors Cloud ERP', href: 'https://hingutailors.vercel.app/login', tag: 'ERP', color: 'text-neon border-neon/40' },
-  { name: 'Cricket Auction Platform', href: 'https://cricketbid-tau.vercel.app/', tag: 'Live', color: 'text-neon border-neon/40' },
   { name: 'Aurevo Minerals LLP', href: 'https://auerevo-minerals.vercel.app/', tag: 'Live', color: 'text-neon border-neon/30' },
   { name: 'Golden Jubilee Invitation', href: 'https://anniversary-invitation-card.vercel.app/', tag: 'Live', color: 'text-neon border-neon/40' },
   { name: 'Heritage Wedding Invitation (Kabir & Ananya)', href: 'https://wedding-invite-drab-tau.vercel.app/', tag: 'Live', color: 'text-neon border-neon/40' }

@@ -131,7 +131,6 @@ export function Footer() {
                   </a>
                 </li>
               ))}
-              <li><FooterLink to="/#projects">InterviewIQ — Voice AI Engine</FooterLink></li>
             </ul>
           </StaggerItem>
         </Stagger>
